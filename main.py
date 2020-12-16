@@ -132,7 +132,8 @@ from config import SessionLocal
 session = SessionLocal()
 from sqlalchemy import or_
 
-from models import *
+from models import User
+from utils import forward_message, SUPPORTED_MESSAGE_FILTERS
 
 def start(update, context):
     chat_id = update.message.chat_id
@@ -230,7 +231,7 @@ def send_trainer(update, context):
     trainer = session.query(User).filter(User.dragon_id==cur_user_id).first()
 
     if trainer is not None:
-        context.bot.send_message(chat_id=trainer.chat_id, text="From your Trainer:\n" + update.message.text)
+        forward_message(update.message, trainer.chat_id, context.bot, is_dragon=False)
         return TRAINER_CHAT
     else:
         update.message.reply_text(SEND_CONNECTION_FAILED, reply_markup=ReplyKeyboardRemove())
@@ -244,11 +245,17 @@ def send_dragon(update, context):
     dragon = session.query(User).filter(User.id==dragon_id).first()
 
     if dragon is not None:
-        context.bot.send_message(chat_id=dragon.chat_id, text="From your Dragon:\n" + update.message.text)
+        forward_message(update.message, dragon.chat_id, context.bot, is_dragon=True)
         return DRAGON_CHAT
     else:
         update.message.reply_text(SEND_CONNECTION_FAILED, reply_markup=ReplyKeyboardRemove())
         return MAIN
+
+def unsupported_media(return_state):
+    def inner_unsupported_media(update, context):
+        update.message.reply_text('Media not supported', reply_to_message_id=update.message.message_id, reply_markup=ReplyKeyboardRemove())
+        return return_state
+    return inner_unsupported_media
 
 def done_chat(update, context):
     update.message.reply_text("Done chatting", reply_markup=ReplyKeyboardRemove())
@@ -289,12 +296,14 @@ def main():
             # Chat with dragon
             DRAGON_CHAT: [CommandHandler(MENU_KEY, start),
                             CommandHandler(DONE_KEY, done_chat),
-                            MessageHandler(Filters.regex(NON_COMMAND_REGEX), send_dragon)],
+                            MessageHandler(SUPPORTED_MESSAGE_FILTERS, send_dragon),
+                            MessageHandler(~SUPPORTED_MESSAGE_FILTERS, unsupported_media(DRAGON_CHAT))],
 
             # Chat with trainer
             TRAINER_CHAT: [CommandHandler(MENU_KEY, start),
                             CommandHandler(DONE_KEY, done_chat),
-                            MessageHandler(Filters.regex(NON_COMMAND_REGEX), send_trainer)],
+                            MessageHandler(SUPPORTED_MESSAGE_FILTERS, send_trainer),
+                            MessageHandler(~SUPPORTED_MESSAGE_FILTERS, unsupported_media(TRAINER_CHAT))],
         },
 
         fallbacks=[CommandHandler('cancel', cancel)]
