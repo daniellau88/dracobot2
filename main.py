@@ -8,8 +8,6 @@ from telegram import (ReplyKeyboardMarkup, ReplyKeyboardRemove)
 from telegram.ext import (Updater, CommandHandler, MessageHandler, Filters,
                           ConversationHandler)
 
-# from dbhelper import *
-
 # Enable logging
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     level=logging.INFO)
@@ -19,9 +17,6 @@ logger = logging.getLogger(__name__)
 TOKEN = os.environ['TELEGRAM_BOT_TOKEN']
 
 UNREGISTERED, MAIN, CHAT, CHAT_LOGIN, DRAGON_CHAT, TRAINER_CHAT = range(6)
-
-# user_db = userdb()
-# am_db = amdb()
 
 # EMOJI UNICODE
 CAKE = u"\U0001F382"
@@ -142,7 +137,6 @@ def start(update, context):
     user_db = session.query(User).filter(or_(User.tele_handle==user.username, User.chat_id==chat_id)).first()
 
     if user_db is not None:
-        # user_db = users_db[0]
         is_new_user = not user_db.registered
 
         if user_db.chat_id != chat_id:
