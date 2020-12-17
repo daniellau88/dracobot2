@@ -31,3 +31,4 @@ class MessageMapping(Base):
     receiver_message_id = Column(Integer, nullable=False)
     receiver_chat_id = Column(Integer, nullable=False)
     deleted = Column(Boolean, nullable=False, default=False, server_default="0")
+    is_dragon = Column(Boolean, nullable=False)

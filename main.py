@@ -128,7 +128,7 @@ session = SessionLocal()
 from sqlalchemy import or_
 
 from models import User
-from utils import forward_message, SUPPORTED_MESSAGE_FILTERS
+from utils import forward_message, SUPPORTED_MESSAGE_FILTERS, handle_edited_message
 
 def start(update, context):
     chat_id = update.message.chat_id
@@ -217,6 +217,7 @@ def check_dragon(update, context):
         update.message.reply_text('You are now connected to your dragon. Type /done when you have finish the conversation.')
         return DRAGON_CHAT
 
+@handle_edited_message(session)
 def send_trainer(update, context):
     user = update.message.from_user
     chat_id = update.message.chat_id
@@ -225,12 +226,13 @@ def send_trainer(update, context):
     trainer = session.query(User).filter(User.dragon_id==cur_user_id).first()
 
     if trainer is not None:
-        forward_message(update.message, trainer.chat_id, context.bot, is_dragon=False)
+        forward_message(update.message, trainer.chat_id, context.bot, session, is_dragon=True)
         return TRAINER_CHAT
     else:
         update.message.reply_text(SEND_CONNECTION_FAILED, reply_markup=ReplyKeyboardRemove())
         return MAIN
 
+@handle_edited_message(session)
 def send_dragon(update, context):
     user = update.message.from_user
     chat_id = update.message.chat_id
@@ -239,11 +241,15 @@ def send_dragon(update, context):
     dragon = session.query(User).filter(User.id==dragon_id).first()
 
     if dragon is not None:
-        forward_message(update.message, dragon.chat_id, context.bot, is_dragon=True)
+        forward_message(update.message, dragon.chat_id, context.bot, session, is_dragon=False)
         return DRAGON_CHAT
     else:
         update.message.reply_text(SEND_CONNECTION_FAILED, reply_markup=ReplyKeyboardRemove())
         return MAIN
+
+@handle_edited_message(session)
+def main_edited_message(update, context):
+    return MAIN
 
 def unsupported_media(return_state):
     def inner_unsupported_media(update, context):
@@ -285,7 +291,8 @@ def main():
                     MessageHandler(Filters.regex(HELP_KEY), helps),
                     MessageHandler(Filters.regex(RULES_KEY), rules),
                     MessageHandler(Filters.regex(DRAGON_CHAT_KEY), check_dragon),
-                    MessageHandler(Filters.regex(TRAINER_CHAT_KEY), check_trainer)],
+                    MessageHandler(Filters.regex(TRAINER_CHAT_KEY), check_trainer),
+                    MessageHandler(SUPPORTED_MESSAGE_FILTERS, main_edited_message)],
 
             # Chat with dragon
             DRAGON_CHAT: [CommandHandler(MENU_KEY, start),
