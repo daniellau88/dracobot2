@@ -30,5 +30,6 @@ class MessageMapping(Base):
     sender_message_id = Column(Integer, primary_key=True, autoincrement=False, nullable=False)
     receiver_message_id = Column(Integer, nullable=False)
     receiver_chat_id = Column(Integer, nullable=False)
+    receiver_caption_message_id = Column(Integer, nullable=True)
     deleted = Column(Boolean, nullable=False, default=False, server_default="0")
     is_dragon = Column(Boolean, nullable=False)

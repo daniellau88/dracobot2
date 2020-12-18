@@ -127,8 +127,8 @@ from config import SessionLocal
 session = SessionLocal()
 from sqlalchemy import or_
 
-from models import User
-from utils import forward_message, SUPPORTED_MESSAGE_FILTERS, handle_edited_message
+from models import User, MessageMapping
+from utils import SUPPORTED_MESSAGE_FILTERS, forward_message, delete_message, handle_edited_message
 
 def start(update, context):
     chat_id = update.message.chat_id
@@ -251,6 +251,12 @@ def send_dragon(update, context):
 def main_edited_message(update, context):
     return MAIN
 
+def handle_delete_message(return_state):
+    def inner_handle_delete_message(update, context):
+        delete_message(update.message, context.bot, session)
+        return return_state
+    return inner_handle_delete_message
+
 def unsupported_media(return_state):
     def inner_unsupported_media(update, context):
         update.message.reply_text('Media not supported', reply_to_message_id=update.message.message_id, reply_markup=ReplyKeyboardRemove())
@@ -287,22 +293,27 @@ def main():
             UNREGISTERED: [CommandHandler('start', start)],
 
             MAIN: [CommandHandler(MENU_KEY, start),
+                    CommandHandler('delete', handle_delete_message(MAIN)),
                     MessageHandler(Filters.regex(ABOUT_THE_BOT_KEY), about),
                     MessageHandler(Filters.regex(HELP_KEY), helps),
                     MessageHandler(Filters.regex(RULES_KEY), rules),
                     MessageHandler(Filters.regex(DRAGON_CHAT_KEY), check_dragon),
                     MessageHandler(Filters.regex(TRAINER_CHAT_KEY), check_trainer),
+                    CommandHandler('dragon', check_dragon),
+                    CommandHandler('trainer', check_trainer),
                     MessageHandler(SUPPORTED_MESSAGE_FILTERS, main_edited_message)],
 
             # Chat with dragon
             DRAGON_CHAT: [CommandHandler(MENU_KEY, start),
                             CommandHandler(DONE_KEY, done_chat),
+                            CommandHandler('delete', handle_delete_message(DRAGON_CHAT)),
                             MessageHandler(SUPPORTED_MESSAGE_FILTERS, send_dragon),
                             MessageHandler(~SUPPORTED_MESSAGE_FILTERS, unsupported_media(DRAGON_CHAT))],
 
             # Chat with trainer
             TRAINER_CHAT: [CommandHandler(MENU_KEY, start),
                             CommandHandler(DONE_KEY, done_chat),
+                            CommandHandler('delete', handle_delete_message(TRAINER_CHAT)),
                             MessageHandler(SUPPORTED_MESSAGE_FILTERS, send_trainer),
                             MessageHandler(~SUPPORTED_MESSAGE_FILTERS, unsupported_media(TRAINER_CHAT))],
         },
