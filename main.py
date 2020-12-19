@@ -8,6 +8,14 @@ from telegram import (ReplyKeyboardMarkup, ReplyKeyboardRemove)
 from telegram.ext import (Updater, CommandHandler, MessageHandler, Filters,
                           ConversationHandler)
 
+from sqlalchemy import or_
+
+from config import SessionLocal
+from models import User
+from resources import *
+
+from utils import SUPPORTED_MESSAGE_FILTERS, forward_message, delete_message, handle_edited_message
+
 # Enable logging
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     level=logging.INFO)
@@ -18,117 +26,9 @@ TOKEN = os.environ['TELEGRAM_BOT_TOKEN']
 
 UNREGISTERED, MAIN, CHAT, CHAT_LOGIN, DRAGON_CHAT, TRAINER_CHAT = range(6)
 
-# EMOJI UNICODE
-CAKE = u"\U0001F382"
-WHALE = u"\U0001F40B"
-ROBOT = u"\U0001F916"
-SKULL = u"\U0001F480"
-SMILEY = u"\U0001F642"
-SPOUTING_WHALE = u"\U0001F433"
-SPEECH_BUBBLE = u"\U0001F4AC"
-THINKING_FACE = u"\U0001F914"
-QUESTION_MARK = u"\U0001F64F"
-MONKEY = u"\U0001F64A"
-DRAGON = u"\U0001F432" #In use for Dragon Trainer Bot
-BLUE_HEART = u"\U0001F499"
-
-# TELEGRAM KEYBOARD KEYS
-ABOUT_THE_BOT_KEY = u"About the Bot" + " " + DRAGON
-ADMIN_KEY = u"admin"
-DRAGON_CHAT_KEY = u"Chat with Dragon" + " " + SPEECH_BUBBLE
-TRAINER_CHAT_KEY = u"Chat with Trainer" + " " + SPEECH_BUBBLE
-HELP_KEY = u"Help" + " " + QUESTION_MARK
-RULES_KEY = u"Rules" + " " + MONKEY
-MENU_KEY = u"mainmenu"
-TRAINER_KEY = u"trainer"
-DRAGON_KEY = u"dragon"
-SEND_ALL_KEY = u"Send_All"
-SEND_ONE_KEY = u"Send_One"
-CHECK_REGIS_KEY = u"Check_Player_Registration"
-DONE_KEY = u"done"
-
-# GREETINGS
-ABOUT_THE_BOT = DRAGON + " *About DracoBot* " + DRAGON + "\n\n" + CAKE + " Birthday: June 2017\n\n" +\
-                ROBOT + " Currently maintained by Ji Cheng and Daniel Lau\n\n" + SKULL +\
-                " Past Bot Developers: Shao Yi, Bai Chuan, Fiz, Youkuan, Kang Ming, Zhi Yu\n\n"
-AM_GREETING = "Hello there, {}!\n\n" +\
-              "Click or type any of the following:\n" +\
-              "/trainer: Chat with your Trainer\n" +\
-              "/dragon: Chat with your Dragon\n" +\
-              "/mainmenu: Exits the Chat feature, and returns to the Main Menu"
-
-AM_LOGIN_GREETING = "Please enter your 4-character Game ID. (Remember Caps!)\n\n" +\
-                     "or click /mainmenu to exit the registration process"
-INVALID_PIN = "You have entered the wrong 4-character Game ID. Please try again, or type /mainmenu to exit."
-REDIRECT_GREETING = "Did you mean: /mainmenu"
-REQUEST_ADMIN_ID = "Please enter your Admin ID to proceed."
-SEND_ADMIN_GREETING = "Hello there, Administrator! What do you want to say to everyone?\n" +\
-                      "Whatever you submit from now on will be broadcasted to all users, be CAREFUL!" +\
-                      "Type /mainmenu to exit, once you have made your announcement."
-SEND_CONNECTION_FAILED = u"This feature is unavailable now as he/she has yet to sign in to the game." +\
-                         u" Please be patient and try again soon!" + SMILEY + "\n\nType /mainmenu to go back."
-SUCCESSFUL_TRAINER_CONNECTION = "You have been connected with your Trainer." +\
-                            " Anything you type here will be sent anonymously to him/her.\n" +\
-                            "To exit, type /done"
-SUCCESSFUL_DRAGON_CONNECTION = "You have been connected with your Dragon." +\
-                               " Anything you type here will be sent anonymously to him/her.\n" +\
-                               "To exit, type /done"
-HELLO_GREETING = "Hello there, {}! DracoBot at your service! Press /mainmenu to bring up keyboard! " + DRAGON
-HELP_MESSAGE = "Hello there, {}!\n\n" +\
-               "Dragon Trainer Bot is a homegrown telegram bot that allows you to anonymously chat with your Dragon or Trainer.\n\n" +\
-               "While in the Main Menu, click on:\n" +\
-               DRAGON_CHAT_KEY + ": To chat with your Dragon \n" +\
-               TRAINER_CHAT_KEY + ": To chat with your Trainer\n" +\
-               ABOUT_THE_BOT_KEY + ": To view information about the bot\n" +\
-               HELP_KEY + ": To explore this bot's functionality\n" +\
-               RULES_KEY + ": To view the game rules\n\n" +\
-               "While in the Chat feature, type any of the following to:\n" +\
-               TRAINER_KEY + ": Chat with your Trainer\n" +\
-               DRAGON_KEY + ": Chat with your Dragon\n\n" +\
-               "Type " + MENU_KEY + " at any point in time to exit the Chat feature, and return to the Main Menu\n\n" +\
-               "Please message @JichNgan @dlau98 if you need technical assistance!\n" +\
-               "Thank you and we hope you'll have fun throughout this game! :)"
-GAME_RULES_MESSAGE = "Rules of Dragons and Trainers" + DRAGON + "\n\n" +\
-                     "Each of you who participated will be assigned an Angel (Trainer) and a Mortal (Dragon). " +\
-                     "Of course, you will know the identity of your Dragon while your Trainer’s identity will be kept " +\
-                     "from you. Throughout the course of the event, feel free to chat with both your Dragon and Trainer " +\
-                     "through telegram bot where your identity will be kept secret, and take care of your dragonwith " +\
-                     "anonymous gift and pranks according to their indicated tolerance levels! " +\
-                     "Of course, you can look forward to seeing what your own trainer does for you as well!\n\n" +\
-                     "Explanation for tolerance levels\n\n" +\
-                     "1: Gift Exchange, do nice things only!\n" +\
-                     "2: Pranks are to be minimal, and no clean up required!\n" +\
-                     "3: Pranks are fine, but do take care of what your dragon says is OFF LIMITS\n\n" +\
-                     "Dos :)\n" +\
-                     "• Observe the Tolerance Levels your dragons have indicated.\n" +\
-                     "• Try to accommodate (if any) requests of your dragons e.g. avoid allergies\n" +\
-                     "• Balance out the pranks with gifts - moderation is key!\n" +\
-                     "• Try (your best) to keep your identity hidden.\n" +\
-                     "• Be active in the event! :)\n" +\
-                     "• Share your pranks and gifts throughout the event in the Draco group chat!\n\n" +\
-                     "Don'ts :(\n" +\
-                     "• Cause major damage (eg. breaking a treasured object) even if they’ve indicated no boundaries.\n" +\
-                     "• Flout other RC/NUS rules (e.g. theft, possession of alcohol *ahem ahem*).\n" +\
-                     "• Cause major inconveniences, especially along the common corridor" +\
-                     "(e.g. blockade the walkway, pranks involving powdered substances like flour or curry powder).\n" +\
-                     "• Cause fire hazards and hinder evacuation routes.\n" +\
-                     "• Write, draw or scribble any obscene/vulgar contents on doors/common area.\n\n" +\
-                     "**IMPORTANT!**\n\n" +\
-                     "NO LIVE ANIMALS OR INSECTS\n" +\
-                     "NO MOVING OF FURNITURE OUT OF THE ROOMS\n\n" +\
-                     "If you have any other questions, concerns or doubts, don’t be afraid to reach out to the" +\
-                     " organizing comm! We hope you have fun and make new friends as well!\n\n" +\
-                     "Love,\n" +\
-                     "Draco House Comm" + BLUE_HEART
-
 KEYBOARD_OPTIONS = [[DRAGON_CHAT_KEY], [TRAINER_CHAT_KEY], [HELP_KEY], [ABOUT_THE_BOT_KEY, RULES_KEY]]
 
-from config import SessionLocal
 session = SessionLocal()
-from sqlalchemy import or_
-
-from models import User, MessageMapping
-from utils import SUPPORTED_MESSAGE_FILTERS, forward_message, delete_message, handle_edited_message
 
 def start(update, context):
     chat_id = update.message.chat_id
@@ -145,12 +45,12 @@ def start(update, context):
             user_db.registered = True
 
         user_db.tele_handle = user.username
-        user_db.name = user.name
+        user_db.tele_name = user.first_name
 
         session.commit()
 
         if is_new_user:
-            # TODO: send welcome message
+            update.message.reply_text(WELCOME_MESSAGE % user.first_name)
             pass
 
         update.message.reply_text(HELLO_GREETING.format(user.first_name),
@@ -161,10 +61,10 @@ def start(update, context):
         # Updates session
         session.commit()
 
-        update.message.reply_text('Unregistered user. Press /start once you have registered.')
+        update.message.reply_text(UNREGISTERED_USER)
 
         if user.username is None:
-            update.message.reply_text('Please register with your telegram handle.')
+            update.message.reply_text(USER_NO_TELE_HANDLE)
 
         return UNREGISTERED
 
@@ -192,13 +92,13 @@ def check_trainer(update, context):
     trainer = session.query(User).filter(User.dragon_id==cur_user_id).first()
 
     if trainer is None:
-        update.message.reply_text('You have no trainer. Please ask the admin to assign a trainer to you.')
+        update.message.reply_text(USER_NO_TRAINER)
         return MAIN
     elif not trainer.registered:
-        update.message.reply_text('Trainer has not register. Please try again later.')
+        update.message.reply_text(USER_UNREGISTERED_TRAINER)
         return MAIN
     else:
-        update.message.reply_text('You are now connected to your trainer. Type /done when you have finish the conversation.')
+        update.message.reply_text(CONNECTED_TRAINER)
         return TRAINER_CHAT
 
 def check_dragon(update, context):
@@ -208,13 +108,13 @@ def check_dragon(update, context):
     dragon = session.query(User).filter(User.id==dragon_id).first()
 
     if dragon is None:
-        update.message.reply_text('You have no dragon. Please ask the admin to assign a trainer to you.')
+        update.message.reply_text(USER_NO_DRAGON)
         return MAIN
     elif not dragon.registered:
-        update.message.reply_text('Dragon has not register. Please try again later.')
+        update.message.reply_text(USER_UNREGISTERED_DRAGON)
         return MAIN
     else:
-        update.message.reply_text('You are now connected to your dragon. Type /done when you have finish the conversation.')
+        update.message.reply_text(CONNECTED_DRAGON)
         return DRAGON_CHAT
 
 @handle_edited_message(session)
@@ -259,12 +159,12 @@ def handle_delete_message(return_state):
 
 def unsupported_media(return_state):
     def inner_unsupported_media(update, context):
-        update.message.reply_text('Media not supported', reply_to_message_id=update.message.message_id, reply_markup=ReplyKeyboardRemove())
+        update.message.reply_text(UNSUPPORTED_MEDIA, reply_to_message_id=update.message.message_id, reply_markup=ReplyKeyboardRemove())
         return return_state
     return inner_unsupported_media
 
 def done_chat(update, context):
-    update.message.reply_text("Done chatting", reply_markup=ReplyKeyboardRemove())
+    update.message.reply_text(CHAT_COMPLETE, reply_markup=ReplyKeyboardRemove())
 
     return MAIN
 
@@ -285,40 +185,39 @@ def main():
     # Get the dispatcher to register handlers
     dp = updater.dispatcher
 
-    # Add conversation handler with the states GENDER, PHOTO, LOCATION and BIO
     conv_handler = ConversationHandler(
-        entry_points=[CommandHandler('start', start)],
+        entry_points=[CommandHandler(START_KEY, start)],
 
         states={
-            UNREGISTERED: [CommandHandler('start', start)],
+            UNREGISTERED: [CommandHandler(START_KEY, start)],
 
             MAIN: [CommandHandler(MENU_KEY, start),
-                    CommandHandler('delete', handle_delete_message(MAIN)),
+                    CommandHandler(DELETE_KEY, handle_delete_message(MAIN)),
                     MessageHandler(Filters.regex(ABOUT_THE_BOT_KEY), about),
                     MessageHandler(Filters.regex(HELP_KEY), helps),
                     MessageHandler(Filters.regex(RULES_KEY), rules),
                     MessageHandler(Filters.regex(DRAGON_CHAT_KEY), check_dragon),
                     MessageHandler(Filters.regex(TRAINER_CHAT_KEY), check_trainer),
-                    CommandHandler('dragon', check_dragon),
-                    CommandHandler('trainer', check_trainer),
+                    CommandHandler(DRAGON_KEY, check_dragon),
+                    CommandHandler(TRAINER_KEY, check_trainer),
                     MessageHandler(SUPPORTED_MESSAGE_FILTERS, main_edited_message)],
 
             # Chat with dragon
             DRAGON_CHAT: [CommandHandler(MENU_KEY, start),
                             CommandHandler(DONE_KEY, done_chat),
-                            CommandHandler('delete', handle_delete_message(DRAGON_CHAT)),
+                            CommandHandler(DELETE_KEY, handle_delete_message(DRAGON_CHAT)),
                             MessageHandler(SUPPORTED_MESSAGE_FILTERS, send_dragon),
                             MessageHandler(~SUPPORTED_MESSAGE_FILTERS, unsupported_media(DRAGON_CHAT))],
 
             # Chat with trainer
             TRAINER_CHAT: [CommandHandler(MENU_KEY, start),
                             CommandHandler(DONE_KEY, done_chat),
-                            CommandHandler('delete', handle_delete_message(TRAINER_CHAT)),
+                            CommandHandler(DELETE_KEY, handle_delete_message(TRAINER_CHAT)),
                             MessageHandler(SUPPORTED_MESSAGE_FILTERS, send_trainer),
                             MessageHandler(~SUPPORTED_MESSAGE_FILTERS, unsupported_media(TRAINER_CHAT))],
         },
 
-        fallbacks=[CommandHandler('cancel', cancel)]
+        fallbacks=[CommandHandler(CANCEL_KEY, cancel)]
     )
 
     dp.add_handler(conv_handler)

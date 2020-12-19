@@ -11,7 +11,7 @@ class User(Base):
     id = Column(Integer, primary_key=True)
     chat_id = Column(Integer, unique=True)
     tele_handle = Column(String(20), nullable=False, unique=True)
-    name = Column(String(100))
+    tele_name = Column(String(100))
     dragon_id = Column(Integer, ForeignKey('users.id'), index=True)
     # ref: https://github.com/sqlalchemy/sqlalchemy/issues/1403#issue-384617192
     registered = Column(Boolean, nullable=False, default=False, server_default="0")
@@ -21,8 +21,12 @@ class UserDetails(Base):
     __tablename__ = 'user_details'
 
     user_id = Column(Integer, ForeignKey(User.id), primary_key=True, nullable=False)
+    name = Column(String(100))
     likes = Column(Text)
     dislikes = Column(Text)
+    room_number = Column(String(6))
+    requests = Column(String(100))
+    level = Column(Integer)
 
 class MessageMapping(Base):
     __tablename__ = 'message_mapping'
