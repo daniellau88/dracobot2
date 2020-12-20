@@ -11,7 +11,7 @@ from telegram.ext import (Updater, CommandHandler, MessageHandler, Filters,
 from sqlalchemy import or_
 
 from config import SessionLocal
-from models import User
+from models import User, MsgFrom
 from resources import *
 
 from utils import SUPPORTED_MESSAGE_FILTERS, forward_message, delete_message, handle_edited_message
@@ -126,7 +126,7 @@ def send_trainer(update, context):
     trainer = session.query(User).filter(User.dragon_id==cur_user_id).first()
 
     if trainer is not None:
-        forward_message(update.message, trainer.chat_id, context.bot, session, is_dragon=True)
+        forward_message(update.message, trainer.chat_id, context.bot, session, message_from=MsgFrom.DRAGON)
         return TRAINER_CHAT
     else:
         update.message.reply_text(SEND_CONNECTION_FAILED, reply_markup=ReplyKeyboardRemove())
@@ -141,7 +141,7 @@ def send_dragon(update, context):
     dragon = session.query(User).filter(User.id==dragon_id).first()
 
     if dragon is not None:
-        forward_message(update.message, dragon.chat_id, context.bot, session, is_dragon=False)
+        forward_message(update.message, dragon.chat_id, context.bot, session, message_from=MsgFrom.TRAINER)
         return DRAGON_CHAT
     else:
         update.message.reply_text(SEND_CONNECTION_FAILED, reply_markup=ReplyKeyboardRemove())

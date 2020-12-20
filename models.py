@@ -4,6 +4,13 @@ Base = declarative_base()
 
 from sqlalchemy import Column, Integer, String, ForeignKey, Text, Boolean
 from sqlalchemy.orm import relationship, backref
+from sqlalchemy.types import Enum
+import enum
+
+class MsgFrom(enum.Enum):
+    DRAGON = 1
+    TRAINER = 2
+    ADMIN = 3
 
 class User(Base):
     __tablename__ = 'users'
@@ -36,4 +43,4 @@ class MessageMapping(Base):
     receiver_chat_id = Column(Integer, nullable=False)
     receiver_caption_message_id = Column(Integer, nullable=True)
     deleted = Column(Boolean, nullable=False, default=False, server_default="0")
-    is_dragon = Column(Boolean, nullable=False)
+    message_from = Column(Enum(MsgFrom), nullable=False)

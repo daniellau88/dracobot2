@@ -1,11 +1,15 @@
+import telegram
+from telegram import InputMediaPhoto, InputMediaAudio, InputMediaDocument, InputMediaVideo
 from telegram.ext import Filters
-from models import MessageMapping
+from models import MessageMapping, MsgFrom
 from sqlalchemy import or_
+
 
 SUPPORTED_MESSAGE_FILTERS = Filters.photo | Filters.sticker | Filters.document | Filters.video | Filters.video_note | Filters.audio | Filters.voice | Filters.text
 
-def format_message(message_text, is_dragon=True, is_prefix=False):
-    receiver_type = 'Dragon' if is_dragon else 'Trainer'
+
+def format_message(message_text, message_from=MsgFrom.DRAGON, is_prefix=False):
+    receiver_type = 'Dragon' if message_from == MsgFrom.DRAGON else 'Trainer' if message_from == MsgFrom.TRAINER else 'Admin'
 
     if is_prefix:
         ret_msg = "%s:\n%s" % (receiver_type, message_text)
@@ -16,7 +20,10 @@ def format_message(message_text, is_dragon=True, is_prefix=False):
             ret_msg = "- %s" % (receiver_type)
     return ret_msg
 
-def forward_message(message, chat_id, bot, session, is_dragon=True):
+def get_highest_resolution(photos):
+    return max(photos, key=lambda x: x.file_size)
+
+def forward_message(message, chat_id, bot, session, message_from=MsgFrom.DRAGON):
     is_forward = message.forward_from is not None or message.forward_from_message_id is not None
     is_photo = len(message.photo) > 0
     is_document = message.document is not None
@@ -28,7 +35,7 @@ def forward_message(message, chat_id, bot, session, is_dragon=True):
 
     caption = message.caption
     caption_msg = None
-    caption_style_text = format_message(caption, is_dragon=is_dragon, is_prefix=False)
+    caption_style_text = format_message(caption, message_from=message_from, is_prefix=False)
 
     reply_to_message_id = None
     if message.reply_to_message is not None:
@@ -44,7 +51,7 @@ def forward_message(message, chat_id, bot, session, is_dragon=True):
         sent_msg = message.forward(chat_id)
         caption_msg = bot.send_message(chat_id=chat_id, text=caption_style_text, reply_to_message_id=sent_msg.message_id)
     elif is_photo:
-        highest_res_photo = max(message.photo, key=lambda x: x.file_size)
+        highest_res_photo = get_highest_resolution(message.photo)
         sent_msg = bot.send_photo(chat_id=chat_id, photo=highest_res_photo, caption=caption_style_text, reply_to_message_id=reply_to_message_id)
     elif is_document:
         sent_msg = bot.send_document(chat_id=chat_id, document=message.document, caption=caption_style_text, reply_to_message_id=reply_to_message_id)
@@ -61,9 +68,9 @@ def forward_message(message, chat_id, bot, session, is_dragon=True):
         sent_msg = bot.send_video_note(chat_id=chat_id, video_note=message.video_note, reply_to_message_id=reply_to_message_id)
         caption_msg = bot.send_message(chat_id=chat_id, text=caption_style_text, reply_to_message_id=sent_msg.message_id)
     else:
-        sent_msg = bot.send_message(chat_id=chat_id, text=format_message(message.text, is_dragon=is_dragon, is_prefix=True), reply_to_message_id=reply_to_message_id)
+        sent_msg = bot.send_message(chat_id=chat_id, text=format_message(message.text, message_from=message_from, is_prefix=True), reply_to_message_id=reply_to_message_id)
 
-    mapping = MessageMapping(sender_message_id=message.message_id, receiver_message_id=sent_msg.message_id, receiver_chat_id=sent_msg.chat_id, is_dragon=is_dragon)
+    mapping = MessageMapping(sender_message_id=message.message_id, receiver_message_id=sent_msg.message_id, receiver_chat_id=sent_msg.chat_id, message_from=message_from)
     if caption_msg is not None:
         mapping.receiver_caption_message_id = caption_msg.message_id
     session.add(mapping)
@@ -73,15 +80,44 @@ def handle_edited_message(session):
     def handle_edited_message_decorator(func):
         def inner_edited_message(update, context):
             if update.edited_message is not None:
-                message_id = update.edited_message.message_id
-                edited_message = session.query(MessageMapping).filter(MessageMapping.sender_message_id==message_id).first()
-                if edited_message is not None:
-                    if update.edited_message.text:
-                        formatted_text = format_message(update.edited_message.text, is_dragon=edited_message.is_dragon, is_prefix=True)
-                        context.bot.edit_message_text(formatted_text, chat_id=edited_message.receiver_chat_id, message_id=edited_message.receiver_message_id)
-                    elif update.edited_message.caption:
-                        formatted_caption = format_message(update.edited_message.caption, is_dragon=edited_message.is_dragon, is_prefix=False)
-                        context.bot.edit_message_caption(caption=formatted_caption, chat_id=edited_message.receiver_chat_id, message_id=edited_message.receiver_message_id)
+                edited_message = update.edited_message
+                message_id = edited_message.message_id
+                edited_message_db = session.query(MessageMapping).filter(MessageMapping.sender_message_id==message_id).first()
+
+                is_photo = len(edited_message.photo) > 0
+                is_document = edited_message.document is not None
+                is_video = edited_message.video is not None
+                is_audio = edited_message.audio is not None
+
+                if edited_message_db is not None:
+                    if is_photo or is_document or is_video or is_audio:
+                        if is_photo:
+                            edited_media = InputMediaPhoto(media=get_highest_resolution(edited_message.photo))
+                        elif is_document:
+                            edited_media = InputMediaDocument(media=edited_message.document)
+                        elif is_video:
+                            edited_media = InputMediaVideo(media=edited_message.video)
+                        elif is_audio:
+                            edited_media = InputMediaAudio(media=edited_message.audio)
+
+                        try:
+                            context.bot.edit_message_media(media=edited_media, chat_id=edited_message_db.receiver_chat_id, message_id=edited_message_db.receiver_message_id)
+                        except telegram.error.BadRequest:
+                            pass
+
+                    if edited_message.text:
+                        formatted_text = format_message(edited_message.text, message_from=edited_message_db.message_from, is_prefix=True)
+
+                        try:
+                            context.bot.edit_message_text(formatted_text, chat_id=edited_message_db.receiver_chat_id, message_id=edited_message_db.receiver_message_id)
+                        except telegram.error.BadRequest:
+                            pass
+                    elif edited_message.caption:
+                        formatted_caption = format_message(edited_message.caption, message_from=edited_message_db.message_from, is_prefix=False)
+                        try:
+                            context.bot.edit_message_caption(caption=formatted_caption, chat_id=edited_message_db.receiver_chat_id, message_id=edited_message_db.receiver_message_id)
+                        except telegram.error.BadRequest:
+                            pass
             else:
                 return func(update, context)
         return inner_edited_message
