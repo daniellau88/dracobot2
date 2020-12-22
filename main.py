@@ -28,13 +28,15 @@ TOKEN = os.environ['TELEGRAM_BOT_TOKEN']
 UNREGISTERED, MAIN, CHAT, CHAT_LOGIN, DRAGON_CHAT, TRAINER_CHAT = range(6)
 
 KEYBOARD_OPTIONS = [[DRAGON_CHAT_KEY], [TRAINER_CHAT_KEY], [HELP_KEY, STATUS_KEY], [ABOUT_THE_BOT_KEY, RULES_KEY]]
+DEFAULT_REPLY_MARKUP = {'reply_markup': ReplyKeyboardMarkup(KEYBOARD_OPTIONS, one_time_keyboard=True)}
+REMOVE_REPLY_MARKUP = {'reply_markup': ReplyKeyboardRemove()}
 
 Session = scoped_session(SessionLocal)
 
 def db_session(method):
     def db_session_decorator(update, context):
         session = Session()
-        return_value = method(update, context, session=session)
+        return_value = method(update, context, session)
         session.close()
         return return_value
     return db_session_decorator
@@ -63,8 +65,7 @@ def start(update, context, session):
         if is_new_user:
             update.message.reply_text(WELCOME_MESSAGE % user.first_name)
 
-        update.message.reply_text(HELLO_GREETING.format(user.first_name),
-            reply_markup=ReplyKeyboardMarkup(KEYBOARD_OPTIONS, one_time_keyboard=True))
+        update.message.reply_text(HELLO_GREETING.format(user.first_name), **DEFAULT_REPLY_MARKUP)
 
         return MAIN
     else:
@@ -76,18 +77,18 @@ def start(update, context, session):
         return UNREGISTERED
 
 def about(update, context):
-    update.message.reply_text(ABOUT_THE_BOT, reply_markup=ReplyKeyboardMarkup(KEYBOARD_OPTIONS, one_time_keyboard=True))
+    update.message.reply_text(ABOUT_THE_BOT, **DEFAULT_REPLY_MARKUP)
 
     return MAIN
 
 def helps(update, context):
     user = update.message.from_user
-    update.message.reply_text(HELP_MESSAGE.format(user.first_name), reply_markup=ReplyKeyboardMarkup(KEYBOARD_OPTIONS, one_time_keyboard=True))
+    update.message.reply_text(HELP_MESSAGE.format(user.first_name), **DEFAULT_REPLY_MARKUP)
 
     return MAIN
 
 def rules(update, context):
-    update.message.reply_text(GAME_RULES_MESSAGE, reply_markup=ReplyKeyboardMarkup(KEYBOARD_OPTIONS, one_time_keyboard=True))
+    update.message.reply_text(GAME_RULES_MESSAGE, **DEFAULT_REPLY_MARKUP)
 
     return MAIN
 
@@ -99,13 +100,13 @@ def check_trainer(update, context, session):
     trainer = session.query(User).filter(User.dragon_id==cur_user_id).first()
 
     if trainer is None:
-        update.message.reply_text(USER_NO_TRAINER, reply_markup=ReplyKeyboardMarkup(KEYBOARD_OPTIONS, one_time_keyboard=True))
+        update.message.reply_text(USER_NO_TRAINER, **DEFAULT_REPLY_MARKUP)
         return MAIN
     elif not trainer.registered:
-        update.message.reply_text(USER_UNREGISTERED_TRAINER, reply_markup=ReplyKeyboardMarkup(KEYBOARD_OPTIONS, one_time_keyboard=True))
+        update.message.reply_text(USER_UNREGISTERED_TRAINER, **DEFAULT_REPLY_MARKUP)
         return MAIN
     else:
-        update.message.reply_text(SUCCESSFUL_TRAINER_CONNECTION)
+        update.message.reply_text(TRAINER_CONNECTION_SUCCESS, **REMOVE_REPLY_MARKUP)
         return TRAINER_CHAT
 
 @db_session
@@ -116,13 +117,13 @@ def check_dragon(update, context, session):
     dragon = session.query(User).filter(User.id==dragon_id).first()
 
     if dragon is None:
-        update.message.reply_text(USER_NO_DRAGON, reply_markup=ReplyKeyboardMarkup(KEYBOARD_OPTIONS, one_time_keyboard=True))
+        update.message.reply_text(USER_NO_DRAGON, **DEFAULT_REPLY_MARKUP)
         return MAIN
     elif not dragon.registered:
-        update.message.reply_text(USER_UNREGISTERED_DRAGON, reply_markup=ReplyKeyboardMarkup(KEYBOARD_OPTIONS, one_time_keyboard=True))
+        update.message.reply_text(USER_UNREGISTERED_DRAGON, **DEFAULT_REPLY_MARKUP)
         return MAIN
     else:
-        update.message.reply_text(SUCCESSFUL_DRAGON_CONNECTION)
+        update.message.reply_text(DRAGON_CONNECTION_SUCCESS, **REMOVE_REPLY_MARKUP)
         return DRAGON_CHAT
 
 @db_session
@@ -138,7 +139,7 @@ def send_trainer(update, context, session):
         forward_message(update.message, trainer.chat_id, context.bot, session, message_from=MsgFrom.DRAGON)
         return TRAINER_CHAT
     else:
-        update.message.reply_text(SEND_CONNECTION_FAILED, reply_markup=ReplyKeyboardRemove())
+        update.message.reply_text(CONNECTION_ERROR, **REMOVE_REPLY_MARKUP)
         return MAIN
 
 @db_session
@@ -154,7 +155,7 @@ def send_dragon(update, context, session):
         forward_message(update.message, dragon.chat_id, context.bot, session, message_from=MsgFrom.TRAINER)
         return DRAGON_CHAT
     else:
-        update.message.reply_text(SEND_CONNECTION_FAILED, reply_markup=ReplyKeyboardRemove())
+        update.message.reply_text(CONNECTION_ERROR, **REMOVE_REPLY_MARKUP)
         return MAIN
 
 @db_session
@@ -176,7 +177,7 @@ def unsupported_media(return_state):
     return inner_unsupported_media
 
 def done_chat(update, context):
-    update.message.reply_text(CHAT_COMPLETE, reply_markup=ReplyKeyboardMarkup(KEYBOARD_OPTIONS, one_time_keyboard=True))
+    update.message.reply_text(CHAT_COMPLETE, **DEFAULT_REPLY_MARKUP)
 
     return MAIN
 
@@ -200,7 +201,7 @@ def status(update, context, session):
     t_registered = format_registered_message(trainer)
     d_registered = format_registered_message(dragon)
 
-    update.message.reply_text(STATUS.format(t_registered, d_registered), reply_markup=ReplyKeyboardMarkup(KEYBOARD_OPTIONS, one_time_keyboard=True))
+    update.message.reply_text(STATUS.format(t_registered, d_registered), **DEFAULT_REPLY_MARKUP)
 
     return MAIN
 

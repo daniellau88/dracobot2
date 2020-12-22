@@ -40,28 +40,22 @@ REQUEST_ADMIN_ID = "Please enter your Admin ID to proceed."
 SEND_ADMIN_GREETING = "Hello there, Administrator! What do you want to say to everyone?\n" +\
                       "Whatever you submit from now on will be broadcasted to all users, be CAREFUL!" +\
                       "Type /mainmenu to exit, once you have made your announcement."
-SEND_CONNECTION_FAILED = u"This feature is unavailable now as he/she has yet to sign in to the game." +\
-                         u" Please be patient and try again soon!" + SMILEY + "\n\nType /mainmenu to go back."
-SUCCESSFUL_TRAINER_CONNECTION = "You have been connected with your Trainer." +\
-                            " Anything you type here will be sent anonymously to him/her.\n" +\
-                            "To exit, type /done"
-SUCCESSFUL_DRAGON_CONNECTION = "You have been connected with your Dragon." +\
-                               " Anything you type here will be sent anonymously to him/her.\n" +\
-                               "To exit, type /done"
 HELLO_GREETING = "Hello there, {}! DracoBot at your service! Press /" + MENU_KEY + " to bring up keyboard! " + DRAGON
 HELP_MESSAGE = "Hello there, {}!\n\n" +\
                "Dragon Trainer Bot is a homegrown telegram bot that allows you to anonymously chat with your Dragon or Trainer.\n\n" +\
                "While in the Main Menu, click on:\n" +\
                DRAGON_CHAT_KEY + ": To chat with your Dragon \n" +\
                TRAINER_CHAT_KEY + ": To chat with your Trainer\n" +\
-               ABOUT_THE_BOT_KEY + ": To view information about the bot\n" +\
                HELP_KEY + ": To explore this bot's functionality\n" +\
-               RULES_KEY + ": To view the game rules\n\n" +\
-               "Type /" + MENU_KEY + " at any point in time to exit the Chat feature, and return to the Main Menu\n\n" +\
+               STATUS_KEY + ": To view status of Dragon and Trainer\n\n" +\
+               ABOUT_THE_BOT_KEY + ": To view information about the bot\n" +\
+               RULES_KEY + ": To view the game rules\n" +\
+               "Type /" + DONE_KEY + " at any point in time to exit the Chat feature\n" +\
+               "Type /" + MENU_KEY + " to show the Main Menu\n\n" +\
                "Please message @dlau98 if you need technical assistance!\n" +\
                "Thank you and we hope you'll have fun throughout this game! :)"
 GAME_RULES_MESSAGE = "Rules of Dragons and Trainers " + DRAGON + "\n\n" +\
-                     "Each of you who participated will be assigned an Angel (Trainer) and a Mortal (Dragon). " +\
+                     "Each of you who participated will be assigned a Trainer and a Dragon. " +\
                      "Of course, you will know the identity of your Dragon while your Trainer’s identity will be kept " +\
                      "from you. Throughout the course of the event, feel free to chat with both your Dragon and Trainer " +\
                      "through telegram bot where your identity will be kept secret, and take care of your dragon with " +\
@@ -94,12 +88,13 @@ GAME_RULES_MESSAGE = "Rules of Dragons and Trainers " + DRAGON + "\n\n" +\
                      "Draco House Comm" + BLUE_HEART
 
 WELCOME_MESSAGE = "Dear %s,\n\n"\
-                    "You woke up dizzy in the highest floors of a building known as AreSeaFore and you don't know how you were transported here. Next to you a piece of paper which reads:\n\n"\
-                    "\"Trainer, you are tasked to train dragon ‘’ for the next 3 weeks. Slowly approach the dragon at unit  to tame it and teach it new skills. Your dragon likes ‘’ but it really dislikes ‘‘. ‘' is stated as off limits. The difficulty of training is LEVEL .\n\n"\
-                    "To assist you in your journey and communicate with your dragons and your trainers, invoke the mystical help of @DragonTrainerBot\n\n"\
-                    "I am your creator @dlau98, and I will watch over all of you trainers throughout the next 3 weeks. Together alongside me are @MistaChewy and @dlau98 who will assist me in your journey. Contact us shall you need assistance in taming your dragon.\n\n"\
-                    "Set forth young one and be the best dragon tamer of AreSeaFore Draco.\"\n\n"\
-                    "*Game of Thrones Music Intensifies*"
+                  "You woke up dizzy in the highest floors of a building known as AreSeaFore and you don't know how you were transported here. Next to you a piece of paper which reads:\n\n"\
+                  "\"Trainer, you are tasked to train dragon ‘’ for the next 3 weeks. Slowly approach the dragon at unit  to tame it and teach it new skills. Your dragon likes ‘’ but it really dislikes ‘‘. ‘' is stated as off limits. The difficulty of training is LEVEL .\n\n"\
+                  "To assist you in your journey and communicate with your dragons and your trainers, invoke the mystical help of @DragonTrainerBot\n\n"\
+                  "I am your creator @dlau98, and I will watch over all of you trainers throughout the next 3 weeks. Do contact me should you need assistance in taming your dragon.\n\n"\
+                  "Set forth young one and be the best dragon tamer of AreSeaFore Draco.\"\n\n"\
+                  "*Game of Thrones Music Intensifies*"
+
 STATUS = "Trainer Status: {}\n"\
             "Dragon Status: {}\n\n"\
             "Dragon Details\n"\
@@ -110,7 +105,14 @@ STATUS = "Trainer Status: {}\n"\
             "Off Limits: \n"\
             "Level: \n"
 
-CHAT_COMPLETE = "Done chatting"
+CHAT_COMPLETE = "Done chatting."
+TRAINER_CONNECTION_SUCCESS = "You have been connected with your Trainer." +\
+                             " Anything you type here will be sent anonymously to him/her.\n" +\
+                             "To exit, type /done"
+DRAGON_CONNECTION_SUCCESS = "You have been connected with your Dragon." +\
+                            " Anything you type here will be sent anonymously to him/her.\n" +\
+                            "To exit, type /done"
+DELETE_MESSAGE_SUCCESS = "Message deleted."
 
 # Error Messages
 USER_UNREGISTERED = "You have not been registered. Press /start once you have registered."
@@ -120,3 +122,7 @@ USER_UNREGISTERED_TRAINER = "Your trainer has not register. Please try again lat
 USER_NO_DRAGON = "You have no dragon. Please ask the admin to assign a trainer to you."
 USER_UNREGISTERED_DRAGON = "Your dragon has not register. Please try again later."
 UNSUPPORTED_MEDIA = "Media not supported."
+CONNECTION_ERROR = "Connection error. Please be patient and try again soon!" + SMILEY
+CANNOT_DELETE_ERROR = "Cannot delete message."
+DELETE_MESSAGE_ERROR = "Message has been deleted."
+DELETE_MESSAGE_REPLY_ERROR = "Please reply a message to delete."

@@ -144,15 +144,15 @@ def delete_message(message, bot, session):
         message_id = message.reply_to_message.message_id
         to_delete_message = session.query(MessageMapping).filter(MessageMapping.sender_message_id==message_id).first()
         if to_delete_message is None:
-            message.reply_text('Cannot delete message', reply_to_message_id=message_id)
+            message.reply_text(CANNOT_DELETE_ERROR, reply_to_message_id=message_id)
         elif to_delete_message.deleted:
-            message.reply_text('Message has already been deleted', reply_to_message_id=message_id)
+            message.reply_text(DELETE_MESSAGE_ERROR, reply_to_message_id=message_id)
         else:
             bot.delete_message(chat_id=to_delete_message.receiver_chat_id, message_id=to_delete_message.receiver_message_id)
             if to_delete_message.receiver_caption_message_id:
                 bot.delete_message(chat_id=to_delete_message.receiver_chat_id, message_id=to_delete_message.receiver_caption_message_id)
             to_delete_message.deleted = True
             session.commit()
-            message.reply_text('Message deleted', reply_to_message_id=message_id)
+            message.reply_text(DELETE_MESSAGE_SUCCESS, reply_to_message_id=message_id)
     else:
-        message.reply_text('Please reply a message to delete')
+        message.reply_text(DELETE_MESSAGE_REPLY_ERROR)
