@@ -2,14 +2,18 @@ import telegram
 from telegram import InputMediaPhoto, InputMediaAudio, InputMediaDocument, InputMediaVideo
 from telegram.ext import Filters
 from models import MessageMapping, MsgFrom
-from sqlalchemy import or_
+from sqlalchemy import or_, and_
+from resources import *
 
 
 SUPPORTED_MESSAGE_FILTERS = Filters.photo | Filters.sticker | Filters.document | Filters.video | Filters.video_note | Filters.audio | Filters.voice | Filters.text
 
 
-def format_message(message_text, message_from=MsgFrom.DRAGON, is_prefix=False):
+def format_message(message_text, message_from=MsgFrom.DRAGON, is_prefix=False, is_edited=False):
     receiver_type = 'Dragon' if message_from == MsgFrom.DRAGON else 'Trainer' if message_from == MsgFrom.TRAINER else 'Admin'
+
+    if is_edited:
+        message_text += ' (edited)'
 
     if is_prefix:
         ret_msg = "%s:\n%s" % (receiver_type, message_text)
@@ -19,6 +23,14 @@ def format_message(message_text, message_from=MsgFrom.DRAGON, is_prefix=False):
         else:
             ret_msg = "- %s" % (receiver_type)
     return ret_msg
+
+def format_registered_message(user):
+    if user is None:
+        return "Not assigned " + CROSS
+    elif user.registered:
+        return "Registered " + GREEN_STATUS
+    else:
+        return "Not registered " + RED_STATUS
 
 def get_highest_resolution(photos):
     return max(photos, key=lambda x: x.file_size)
@@ -76,51 +88,54 @@ def forward_message(message, chat_id, bot, session, message_from=MsgFrom.DRAGON)
     session.add(mapping)
     session.commit()
 
-def handle_edited_message(session):
-    def handle_edited_message_decorator(func):
-        def inner_edited_message(update, context):
-            if update.edited_message is not None:
-                edited_message = update.edited_message
-                message_id = edited_message.message_id
-                edited_message_db = session.query(MessageMapping).filter(MessageMapping.sender_message_id==message_id).first()
+# Must be used together with db_session
+def handle_edited_message(func):
+    def handle_edited_message_decorator(update, context, session):
+        if update.edited_message is not None:
+            edited_message = update.edited_message
+            message_id = edited_message.message_id
+            edited_message_db = session.query(MessageMapping).filter(and_(MessageMapping.sender_message_id==message_id, MessageMapping.deleted == False)).first()
 
-                is_photo = len(edited_message.photo) > 0
-                is_document = edited_message.document is not None
-                is_video = edited_message.video is not None
-                is_audio = edited_message.audio is not None
+            is_photo = len(edited_message.photo) > 0
+            is_document = edited_message.document is not None
+            is_video = edited_message.video is not None
+            is_audio = edited_message.audio is not None
 
-                if edited_message_db is not None:
-                    if is_photo or is_document or is_video or is_audio:
-                        if is_photo:
-                            edited_media = InputMediaPhoto(media=get_highest_resolution(edited_message.photo))
-                        elif is_document:
-                            edited_media = InputMediaDocument(media=edited_message.document)
-                        elif is_video:
-                            edited_media = InputMediaVideo(media=edited_message.video)
-                        elif is_audio:
-                            edited_media = InputMediaAudio(media=edited_message.audio)
+            if edited_message_db is not None:
+                if is_photo or is_document or is_video or is_audio:
+                    if is_photo:
+                        edited_media = InputMediaPhoto(media=get_highest_resolution(edited_message.photo))
+                    elif is_document:
+                        edited_media = InputMediaDocument(media=edited_message.document)
+                    elif is_video:
+                        edited_media = InputMediaVideo(media=edited_message.video)
+                    elif is_audio:
+                        edited_media = InputMediaAudio(media=edited_message.audio)
 
-                        try:
-                            context.bot.edit_message_media(media=edited_media, chat_id=edited_message_db.receiver_chat_id, message_id=edited_message_db.receiver_message_id)
-                        except telegram.error.BadRequest:
-                            pass
+                    try:
+                        context.bot.edit_message_media(media=edited_media, chat_id=edited_message_db.receiver_chat_id, message_id=edited_message_db.receiver_message_id)
+                    except telegram.error.BadRequest as e:
+                        print(e)
+                        pass
 
-                    if edited_message.text:
-                        formatted_text = format_message(edited_message.text, message_from=edited_message_db.message_from, is_prefix=True)
+                if edited_message.text:
+                    formatted_text = format_message(edited_message.text, message_from=edited_message_db.message_from, is_prefix=True, is_edited=True)
 
-                        try:
-                            context.bot.edit_message_text(formatted_text, chat_id=edited_message_db.receiver_chat_id, message_id=edited_message_db.receiver_message_id)
-                        except telegram.error.BadRequest:
-                            pass
-                    elif edited_message.caption:
-                        formatted_caption = format_message(edited_message.caption, message_from=edited_message_db.message_from, is_prefix=False)
-                        try:
-                            context.bot.edit_message_caption(caption=formatted_caption, chat_id=edited_message_db.receiver_chat_id, message_id=edited_message_db.receiver_message_id)
-                        except telegram.error.BadRequest:
-                            pass
-            else:
-                return func(update, context)
-        return inner_edited_message
+                    try:
+                        context.bot.edit_message_text(formatted_text, chat_id=edited_message_db.receiver_chat_id, message_id=edited_message_db.receiver_message_id)
+                    except telegram.error.BadRequest as e:
+                        print(e)
+                        pass
+                elif edited_message.caption:
+                    formatted_caption = format_message(edited_message.caption, message_from=edited_message_db.message_from, is_prefix=False, is_edited=True)
+                    try:
+                        context.bot.edit_message_caption(caption=formatted_caption, chat_id=edited_message_db.receiver_chat_id, message_id=edited_message_db.receiver_message_id)
+                    except telegram.error.BadRequest as e:
+                        print(e)
+                        pass
+            return
+        else:
+            return func(update, context, session)
     return handle_edited_message_decorator
 
 def delete_message(message, bot, session):
