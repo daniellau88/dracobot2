@@ -182,6 +182,8 @@ def send_dragon(update, context, session):
 @db_session
 @handle_edited_message
 def main_edited_message(update, context, session):
+    update.message.reply_text(UNKNOWN_COMMAND)
+
     return MAIN
 
 

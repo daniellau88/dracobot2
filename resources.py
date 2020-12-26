@@ -127,3 +127,4 @@ CONNECTION_ERROR = "Connection error. Please be patient and try again soon!" + S
 CANNOT_DELETE_ERROR = "Cannot delete message."
 DELETE_MESSAGE_ERROR = "Message has been deleted."
 DELETE_MESSAGE_REPLY_ERROR = "Please reply a message to delete."
+UNKNOWN_COMMAND = "Unknown command. Press /" + MENU_KEY + " to bring up keyboard."
