@@ -10,7 +10,7 @@ THINKING_FACE = u"\U0001F914"
 HELP = u"\U0001F64F"
 TRAINER = u"\U0001F3CB"
 MONKEY = u"\U0001F64A"
-DRAGON = u"\U0001F432" #In use for Dragon Trainer Bot
+DRAGON = u"\U0001F432"  # In use for Dragon Trainer Bot
 BLUE_HEART = u"\U0001F499"
 GREEN_STATUS = u"\U0001F7E2"
 RED_STATUS = u"\U0001F534"
@@ -34,13 +34,14 @@ DONE_KEY = u"done"
 
 # GREETINGS
 ABOUT_THE_BOT = DRAGON + " *About DracoBot* " + DRAGON + "\n\n" + CAKE + " Birthday: June 2017\n\n" +\
-                ROBOT + " Currently maintained by Daniel Lau\n\n" + SKULL +\
-                " Past Bot Developers: Ji Cheng, Shao Yi, Bai Chuan, Fiz, Youkuan, Kang Ming, Zhi Yu\n\n"
+    ROBOT + " Currently maintained by Daniel Lau\n\n" + SKULL +\
+    " Past Bot Developers: Ji Cheng, Shao Yi, Bai Chuan, Fiz, Youkuan, Kang Ming, Zhi Yu\n\n"
 REQUEST_ADMIN_ID = "Please enter your Admin ID to proceed."
 SEND_ADMIN_GREETING = "Hello there, Administrator! What do you want to say to everyone?\n" +\
                       "Whatever you submit from now on will be broadcasted to all users, be CAREFUL!" +\
                       "Type /mainmenu to exit, once you have made your announcement."
-HELLO_GREETING = "Hello there, {}! DracoBot at your service! Press /" + MENU_KEY + " to bring up keyboard! " + DRAGON
+HELLO_GREETING = "Hello there, {}! DracoBot at your service! Press /" + \
+    MENU_KEY + " to bring up keyboard! " + DRAGON
 HELP_MESSAGE = "Hello there, {}!\n\n" +\
                "Dragon Trainer Bot is a homegrown telegram bot that allows you to anonymously chat with your Dragon or Trainer.\n\n" +\
                "While in the Main Menu, click on:\n" +\
@@ -96,14 +97,14 @@ WELCOME_MESSAGE = "Dear %s,\n\n"\
                   "*Game of Thrones Music Intensifies*"
 
 STATUS = "Trainer Status: {}\n"\
-            "Dragon Status: {}\n\n"\
-            "Dragon Details\n"\
-            "Name: \n"\
-            "Likes: \n"\
-            "Dislikes: \n"\
-            "Unit: \n"\
-            "Off Limits: \n"\
-            "Level: \n"
+    "Dragon Status: {}\n\n"\
+    "Dragon Details\n"\
+    "Name: \n"\
+    "Likes: \n"\
+    "Dislikes: \n"\
+    "Unit: \n"\
+    "Off Limits: \n"\
+    "Level: \n"
 
 CHAT_COMPLETE = "Done chatting."
 TRAINER_CONNECTION_SUCCESS = "You have been connected with your Trainer." +\
