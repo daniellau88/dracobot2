@@ -39,6 +39,7 @@ class MessageMapping(Base):
     __tablename__ = 'message_mapping'
 
     sender_message_id = Column(Integer, primary_key=True, autoincrement=False, nullable=False)
+    sender_chat_id = Column(Integer, primary_key=True, autoincrement=False, nullable=False)
     receiver_message_id = Column(Integer, nullable=False)
     receiver_chat_id = Column(Integer, nullable=False)
     receiver_caption_message_id = Column(Integer, nullable=True)
