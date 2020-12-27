@@ -26,6 +26,7 @@ class User(Base):
                         default=False, server_default="0")
     dragon = relationship('User', remote_side=[id], backref=backref(
         'trainer', uselist=False), uselist=False, post_update=True)
+    details = relationship('UserDetails', uselist=False, back_populates='user', lazy='joined')
 
 
 class UserDetails(Base):
@@ -39,6 +40,7 @@ class UserDetails(Base):
     room_number = Column(String(6))
     requests = Column(String(100))
     level = Column(Integer)
+    user = relationship('User', back_populates='details')
 
 
 class MessageMapping(Base):

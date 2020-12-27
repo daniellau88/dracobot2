@@ -1,7 +1,7 @@
-from utils import SUPPORTED_MESSAGE_FILTERS, forward_message, delete_message, handle_edited_message, format_registered_message
-from resources import *
-from models import User, MsgFrom
-from config import SessionLocal
+from dracobot2.utils import SUPPORTED_MESSAGE_FILTERS, forward_message, delete_message, handle_edited_message, format_registered_message
+from dracobot2.resources import *
+from dracobot2.models import User, MsgFrom
+from dracobot2.config import SessionLocal
 from sqlalchemy.orm import scoped_session
 from sqlalchemy import or_
 from telegram.ext import (Updater, CommandHandler, MessageHandler, Filters,
@@ -24,7 +24,7 @@ TOKEN = os.environ['TELEGRAM_BOT_TOKEN']
 UNREGISTERED, MAIN, CHAT, CHAT_LOGIN, DRAGON_CHAT, TRAINER_CHAT = range(6)
 
 KEYBOARD_OPTIONS = [[DRAGON_CHAT_KEY], [TRAINER_CHAT_KEY],
-                    [HELP_KEY, STATUS_KEY], [ABOUT_THE_BOT_KEY, RULES_KEY]]
+                    [HELP_KEY, STATUS_KEY], [RULES_KEY, ABOUT_THE_BOT_KEY]]
 DEFAULT_REPLY_MARKUP = {'reply_markup': ReplyKeyboardMarkup(
     KEYBOARD_OPTIONS, one_time_keyboard=True)}
 REMOVE_REPLY_MARKUP = {'reply_markup': ReplyKeyboardRemove()}
@@ -61,10 +61,22 @@ def start(update, context, session):
         user_db.tele_handle = user.username
         user_db.tele_name = user.first_name
 
-        session.commit()
-
         if is_new_user:
-            update.message.reply_text(WELCOME_MESSAGE % user.first_name)
+            dragon = user_db.dragon
+            if dragon and dragon.details and user_db.details:
+                update.message.reply_text(WELCOME_MESSAGE.format(**{
+                    'name': user_db.details.name,
+                    'dragon_name': dragon.details.name,
+                    'dragon_room_number': dragon.details.room_number,
+                    'dragon_likes': dragon.details.likes,
+                    'dragon_dislikes': dragon.details.dislikes,
+                    'dragon_requests': dragon.details.requests,
+                    'dragon_level': dragon.details.level
+                }))
+            else:
+                update.message.reply_text(USER_NO_DRAGON)
+
+        session.commit()
 
         update.message.reply_text(HELLO_GREETING.format(
             user.first_name), **DEFAULT_REPLY_MARKUP)
@@ -226,11 +238,29 @@ def status(update, context, session):
     trainer = session.query(User).filter(User.dragon_id == cur_user.id).first()
     dragon = session.query(User).filter(User.id == cur_user.dragon_id).first()
 
+    dragon_details = None
+    if dragon and dragon.details:
+        dragon_details = {
+            'name': dragon.details.name,
+            'likes': dragon.details.likes,
+            'dislikes': dragon.details.dislikes,
+            'room_number': dragon.details.room_number,
+            'requests': dragon.details.requests,
+            'level': dragon.details.level
+        }
+
     t_registered = format_registered_message(trainer)
     d_registered = format_registered_message(dragon)
 
-    update.message.reply_text(STATUS.format(
-        t_registered, d_registered), **DEFAULT_REPLY_MARKUP)
+    message = STATUS.format(**{
+        'trainer_status': t_registered,
+        'dragon_status': d_registered
+    })
+
+    if dragon_details is not None:
+        message += '\n' + DRAGON_DETAILS.format(**dragon_details)
+
+    update.message.reply_text(message, **DEFAULT_REPLY_MARKUP)
 
     return MAIN
 
