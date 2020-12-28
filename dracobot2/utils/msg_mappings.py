@@ -7,7 +7,8 @@ from dracobot2.resources import *
 from .resources import *
 
 
-SUPPORTED_MESSAGE_FILTERS = Filters.photo | Filters.sticker | Filters.document | Filters.video | Filters.video_note | Filters.audio | Filters.voice | Filters.text
+SUPPORTED_MESSAGE_FILTERS = Filters.audio | Filters.document | Filters.photo | Filters.sticker | Filters.text | Filters.video | Filters.video_note | Filters.voice
+UNSUPPORTED_MESSAGE_FILTERS = Filters.animation | Filters.contact | Filters.dice | Filters.game | Filters.invoice | Filters.location | Filters.passport_data | Filters.poll | Filters.successful_payment | Filters.venue
 
 
 def get_highest_resolution(photos):

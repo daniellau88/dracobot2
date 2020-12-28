@@ -37,9 +37,8 @@ DONE_KEY = u"done"
 ABOUT_THE_BOT = DRAGON_EMOJI + " *About DracoBot* " + DRAGON_EMOJI + "\n\n" + CAKE_EMOJI + " Birthday: June 2017\n\n" +\
     ROBOT_EMOJI + " Currently maintained by Daniel Lau\n\n" + SKULL_EMOJI +\
     " Past Bot Developers: Ji Cheng, Shao Yi, Bai Chuan, Fiz, Youkuan, Kang Ming, Zhi Yu\n\n"
-REQUEST_ADMIN_ID = "Please enter your Admin ID to proceed."
 ADMIN_GREETING = "Hello there, Administrator! What do you want to say to everyone?\n" +\
-    "Whatever you submit from now on will be broadcasted to all users, be CAREFUL!" +\
+    "Whatever you submit from now on will be broadcasted to all users, be CAREFUL!\n" +\
     "Type /" + DONE_KEY + " to exit, once you have made your announcement."
 HELLO_GREETING = "Hello there, {}! DracoBot at your service! Press /" + \
     MENU_KEY + " to bring up keyboard! " + DRAGON_EMOJI
@@ -104,11 +103,8 @@ DRAGON_DETAILS = "Dragon Details " + DRAGON_EMOJI + "\n"\
     "Unit: {room_number}\n"\
     "Off Limits: {requests}\n"\
     "Level: {level:d}\n"
-CHAT_COMPLETE = "Done chatting."
-TRAINER_CONNECTION_SUCCESS = "You have been connected with your Trainer." +\
-    " Anything you type here will be sent anonymously to him/her.\n" +\
-    "To exit, type /" + DONE_KEY
-DRAGON_CONNECTION_SUCCESS = "You have been connected with your Dragon." +\
+CHAT_COMPLETE = "You have finish chatting with your {}."
+CONNECTION_SUCCESS = "You have been connected with your {}." +\
     " Anything you type here will be sent anonymously to him/her.\n" +\
     "To exit, type /" + DONE_KEY
 DELETE_MESSAGE_SUCCESS = "Message deleted."
@@ -127,3 +123,4 @@ DELETE_MESSAGE_ERROR = "Message has been deleted."
 DELETE_MESSAGE_REPLY_ERROR = "Please reply a message to delete."
 UNKNOWN_COMMAND = "Unknown command. Press /" + \
     MENU_KEY + " to bring up keyboard."
+TIMEOUT_MESSAGE = "You are inactive for more than 10 minutes. You have been disconnected from your {} chat."
