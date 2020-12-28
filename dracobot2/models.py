@@ -24,6 +24,8 @@ class User(Base):
     # ref: https://github.com/sqlalchemy/sqlalchemy/issues/1403#issue-384617192
     registered = Column(Boolean, nullable=False,
                         default=False, server_default="0")
+    is_admin = Column(Boolean, nullable=False,
+                        default=False, server_default="0")
     dragon = relationship('User', remote_side=[id], backref=backref(
         'trainer', uselist=False), uselist=False, post_update=True)
     details = relationship('UserDetails', uselist=False, back_populates='user', lazy='joined')
@@ -50,8 +52,8 @@ class MessageMapping(Base):
         Integer, primary_key=True, autoincrement=False, nullable=False)
     sender_chat_id = Column(Integer, primary_key=True,
                             autoincrement=False, nullable=False)
-    receiver_message_id = Column(Integer, nullable=False)
-    receiver_chat_id = Column(Integer, nullable=False)
+    receiver_message_id = Column(Integer, primary_key=True, nullable=False)
+    receiver_chat_id = Column(Integer, primary_key=True, nullable=False)
     receiver_caption_message_id = Column(Integer, nullable=True)
     deleted = Column(Boolean, nullable=False,
                      default=False, server_default="0")

@@ -1,4 +1,4 @@
-from dracobot2.utils import SUPPORTED_MESSAGE_FILTERS, forward_message, delete_message, handle_edited_message, format_registered_message
+from dracobot2.utils import SUPPORTED_MESSAGE_FILTERS, forward_message, handle_edited_message, format_registered_message, delete_message, delete_message_reply
 from dracobot2.resources import *
 from dracobot2.models import User, MsgFrom
 from dracobot2.config import SessionLocal
@@ -21,7 +21,8 @@ logger = logging.getLogger(__name__)
 
 TOKEN = os.environ['TELEGRAM_BOT_TOKEN']
 
-UNREGISTERED, MAIN, CHAT, CHAT_LOGIN, DRAGON_CHAT, TRAINER_CHAT = range(6)
+UNREGISTERED, MAIN, CHAT, CHAT_LOGIN, DRAGON_CHAT, TRAINER_CHAT, ADMIN_CHAT = range(
+    7)
 
 KEYBOARD_OPTIONS = [[DRAGON_CHAT_KEY], [TRAINER_CHAT_KEY],
                     [HELP_KEY, STATUS_KEY], [RULES_KEY, ABOUT_THE_BOT_KEY]]
@@ -154,6 +155,20 @@ def check_dragon(update, context, session):
 
 
 @db_session
+def check_admin(update, context, session):
+    chat_id = update.message.chat_id
+    user_db = session.query(User).filter(
+        User.chat_id == chat_id).first()
+
+    if user_db and user_db.is_admin:
+        update.message.reply_text(ADMIN_GREETING)
+        return ADMIN_CHAT
+
+    update.message.reply_text(UNKNOWN_COMMAND)
+    return MAIN
+
+
+@db_session
 @handle_edited_message
 def send_trainer(update, context, session):
     user = update.message.from_user
@@ -193,6 +208,26 @@ def send_dragon(update, context, session):
 
 @db_session
 @handle_edited_message
+def send_admin(update, context, session):
+    user = update.message.from_user
+    chat_id = update.message.chat_id
+    user_db = session.query(User).filter(User.chat_id == chat_id).first()
+
+    if not user_db.is_admin:
+        return MAIN
+
+    all_users = session.query(User).filter(User.registered == True).all()
+
+    for to_send_user in all_users:
+        if to_send_user.id != user_db.id:
+            forward_message(update.message, to_send_user.chat_id,
+                            context.bot, session, message_from=MsgFrom.ADMIN)
+
+    return ADMIN_CHAT
+
+
+@db_session
+@handle_edited_message
 def main_edited_message(update, context, session):
     update.message.reply_text(UNKNOWN_COMMAND)
 
@@ -202,9 +237,20 @@ def main_edited_message(update, context, session):
 def handle_delete_message(return_state):
     @db_session
     def inner_handle_delete_message(update, context, session):
-        delete_message(update.message, context.bot, session)
+        delete_message_reply(update.message, context.bot, session)
         return return_state
     return inner_handle_delete_message
+
+
+@db_session
+def delete_admin(update, context, session):
+    if len(context.args) == 2:
+        chat_id, message_id = context.args
+        delete_message(update.message, message_id,
+                       chat_id, None, context.bot, session)
+    else:
+        delete_message_reply(update.message, context.bot, session)
+    return ADMIN_CHAT
 
 
 def unsupported_media(return_state):
@@ -295,6 +341,7 @@ def main():
                        TRAINER_CHAT_KEY), check_trainer),
                    CommandHandler(DRAGON_KEY, check_dragon),
                    CommandHandler(TRAINER_KEY, check_trainer),
+                   CommandHandler(ADMIN_KEY, check_admin),
                    MessageHandler(SUPPORTED_MESSAGE_FILTERS, main_edited_message)],
 
             # Chat with dragon
@@ -314,6 +361,12 @@ def main():
                            MessageHandler(
                                SUPPORTED_MESSAGE_FILTERS, send_trainer),
                            MessageHandler(~SUPPORTED_MESSAGE_FILTERS, unsupported_media(TRAINER_CHAT))],
+
+            ADMIN_CHAT: [CommandHandler(MENU_KEY, start),
+                         CommandHandler(DONE_KEY, done_chat),
+                         CommandHandler(DELETE_KEY, delete_admin),
+                         MessageHandler(SUPPORTED_MESSAGE_FILTERS, send_admin),
+                         MessageHandler(~SUPPORTED_MESSAGE_FILTERS, unsupported_media(ADMIN_CHAT))],
         },
 
         fallbacks=[CommandHandler(CANCEL_KEY, cancel)]

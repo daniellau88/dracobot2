@@ -38,9 +38,9 @@ ABOUT_THE_BOT = DRAGON_EMOJI + " *About DracoBot* " + DRAGON_EMOJI + "\n\n" + CA
     ROBOT_EMOJI + " Currently maintained by Daniel Lau\n\n" + SKULL_EMOJI +\
     " Past Bot Developers: Ji Cheng, Shao Yi, Bai Chuan, Fiz, Youkuan, Kang Ming, Zhi Yu\n\n"
 REQUEST_ADMIN_ID = "Please enter your Admin ID to proceed."
-SEND_ADMIN_GREETING = "Hello there, Administrator! What do you want to say to everyone?\n" +\
+ADMIN_GREETING = "Hello there, Administrator! What do you want to say to everyone?\n" +\
     "Whatever you submit from now on will be broadcasted to all users, be CAREFUL!" +\
-    "Type /mainmenu to exit, once you have made your announcement."
+    "Type /" + DONE_KEY + " to exit, once you have made your announcement."
 HELLO_GREETING = "Hello there, {}! DracoBot at your service! Press /" + \
     MENU_KEY + " to bring up keyboard! " + DRAGON_EMOJI
 HELP_MESSAGE = "Hello there, {}!\n\n" +\
@@ -97,7 +97,7 @@ WELCOME_MESSAGE = "Dear {name},\n\n"\
     "*Game of Thrones Music Intensifies*"
 STATUS = "Trainer Status: {trainer_status}\n"\
     "Dragon Status: {dragon_status}\n"
-DRAGON_DETAILS = "Dragon Details\n"\
+DRAGON_DETAILS = "Dragon Details " + DRAGON_EMOJI + "\n"\
     "Name: {name}\n"\
     "Likes: {likes}\n"\
     "Dislikes: {dislikes}\n"\

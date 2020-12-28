@@ -91,15 +91,15 @@ def handle_edited_message(func):
             edited_message = update.edited_message
             message_id = edited_message.message_id
             chat_id = edited_message.chat_id
-            edited_message_db = session.query(MessageMapping).filter(and_(
-                MessageMapping.sender_message_id == message_id, MessageMapping.sender_chat_id == chat_id, MessageMapping.deleted == False)).first()
+            edited_messages_db = session.query(MessageMapping).filter(and_(
+                MessageMapping.sender_message_id == message_id, MessageMapping.sender_chat_id == chat_id, MessageMapping.deleted == False)).all()
 
             is_photo = len(edited_message.photo) > 0
             is_document = edited_message.document is not None
             is_video = edited_message.video is not None
             is_audio = edited_message.audio is not None
 
-            if edited_message_db is not None:
+            if edited_messages_db and len(edited_messages_db) > 0:
                 if is_photo or is_document or is_video or is_audio:
                     if is_photo:
                         edited_media = InputMediaPhoto(
@@ -114,60 +114,70 @@ def handle_edited_message(func):
                         edited_media = InputMediaAudio(
                             media=edited_message.audio)
 
-                    try:
-                        context.bot.edit_message_media(
-                            media=edited_media, chat_id=edited_message_db.receiver_chat_id, message_id=edited_message_db.receiver_message_id)
-                    except telegram.error.BadRequest as e:
-                        print(e)
-                        pass
+                    for edited_message_db in edited_messages_db:
+                        try:
+                            context.bot.edit_message_media(
+                                media=edited_media, chat_id=edited_message_db.receiver_chat_id, message_id=edited_message_db.receiver_message_id)
+                        except telegram.error.BadRequest as e:
+                            print(e)
+                            pass
 
                 if edited_message.text:
-                    formatted_text = format_message(
-                        edited_message.text, message_from=edited_message_db.message_from, is_prefix=True, is_edited=True)
+                    for edited_message_db in edited_messages_db:
+                        formatted_text = format_message(
+                            edited_message.text, message_from=edited_message_db.message_from, is_prefix=True, is_edited=True)
 
-                    try:
-                        context.bot.edit_message_text(
-                            formatted_text, chat_id=edited_message_db.receiver_chat_id, message_id=edited_message_db.receiver_message_id)
-                    except telegram.error.BadRequest as e:
-                        print(e)
-                        pass
+                        try:
+                            context.bot.edit_message_text(
+                                formatted_text, chat_id=edited_message_db.receiver_chat_id, message_id=edited_message_db.receiver_message_id)
+                        except telegram.error.BadRequest as e:
+                            print(e)
+                            pass
                 elif edited_message.caption:
-                    formatted_caption = format_message(
-                        edited_message.caption, message_from=edited_message_db.message_from, is_prefix=False, is_edited=True)
-                    try:
-                        context.bot.edit_message_caption(
-                            caption=formatted_caption, chat_id=edited_message_db.receiver_chat_id, message_id=edited_message_db.receiver_message_id)
-                    except telegram.error.BadRequest as e:
-                        print(e)
-                        pass
+                    for edited_message_db in edited_messages_db:
+                        formatted_caption = format_message(
+                            edited_message.caption, message_from=edited_message_db.message_from, is_prefix=False, is_edited=True)
+
+                        try:
+                            context.bot.edit_message_caption(
+                                caption=formatted_caption, chat_id=edited_message_db.receiver_chat_id, message_id=edited_message_db.receiver_message_id)
+                        except telegram.error.BadRequest as e:
+                            print(e)
+                            pass
             return
         else:
             return func(update, context, session)
     return handle_edited_message_decorator
 
 
-def delete_message(message, bot, session):
-    is_replying = message.reply_to_message is not None
-    if is_replying:
-        message_id = message.reply_to_message.message_id
-        chat_id = message.reply_to_message.chat_id
-        to_delete_message = session.query(MessageMapping).filter(
-            MessageMapping.sender_message_id == message_id, MessageMapping.sender_chat_id == chat_id, MessageMapping.deleted == False).first()
-        if to_delete_message is None:
-            message.reply_text(CANNOT_DELETE_ERROR,
-                               reply_to_message_id=message_id)
-        elif to_delete_message.deleted:
-            message.reply_text(DELETE_MESSAGE_ERROR,
-                               reply_to_message_id=message_id)
-        else:
+def delete_message(message, message_id, chat_id, reply_to_message_id, bot, session):
+    to_delete_messages = session.query(MessageMapping).filter(
+        MessageMapping.sender_message_id == message_id, MessageMapping.sender_chat_id == chat_id).all()
+
+    if not (to_delete_messages and len(to_delete_messages) > 0):
+        message.reply_text(CANNOT_DELETE_ERROR,
+                           reply_to_message_id=reply_to_message_id)
+    elif to_delete_messages[0].deleted:
+        message.reply_text(DELETE_MESSAGE_ERROR,
+                           reply_to_message_id=reply_to_message_id)
+    else:
+        for to_delete_message in to_delete_messages:
             bot.delete_message(chat_id=to_delete_message.receiver_chat_id,
                                message_id=to_delete_message.receiver_message_id)
             if to_delete_message.receiver_caption_message_id:
                 bot.delete_message(chat_id=to_delete_message.receiver_chat_id,
                                    message_id=to_delete_message.receiver_caption_message_id)
             to_delete_message.deleted = True
-            session.commit()
-            message.reply_text(DELETE_MESSAGE_SUCCESS,
-                               reply_to_message_id=message_id)
+        session.commit()
+        message.reply_text(DELETE_MESSAGE_SUCCESS,
+                           reply_to_message_id=reply_to_message_id)
+
+
+def delete_message_reply(message, bot, session):
+    is_replying = message.reply_to_message is not None
+    if is_replying:
+        message_id = message.reply_to_message.message_id
+        chat_id = message.reply_to_message.chat_id
+        delete_message(message, message_id, chat_id, message_id, bot, session)
     else:
         message.reply_text(DELETE_MESSAGE_REPLY_ERROR)
