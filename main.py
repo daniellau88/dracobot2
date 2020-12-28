@@ -393,15 +393,15 @@ def main():
         states={
             UNREGISTERED: [MessageHandler(Filters.all, start)],
 
-            MAIN: [CommandHandler(MENU_KEY, start),
+            MAIN: [dragon_handler,
+                   trainer_handler,
+                   admin_handler,
+                   CommandHandler(MENU_KEY, start),
                    CommandHandler(DELETE_KEY, handle_delete_message),
                    MessageHandler(Filters.regex(ABOUT_THE_BOT_KEY), about),
                    MessageHandler(Filters.regex(HELP_KEY), helps),
                    MessageHandler(Filters.regex(RULES_KEY), rules),
                    MessageHandler(Filters.regex(STATUS_KEY), status),
-                   dragon_handler,
-                   trainer_handler,
-                   admin_handler,
                    MessageHandler(SUPPORTED_MESSAGE_FILTERS, main_edited_message)],
         },
 
