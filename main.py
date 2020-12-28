@@ -69,6 +69,10 @@ def start(update, context, session):
         user_db.tele_handle = user.username
         user_db.tele_name = user.first_name
 
+        first_name = user.first_name
+        if user_db.details:
+            first_name = user_db.details.name
+
         if is_new_user:
             dragon = user_db.dragon
             if dragon and dragon.details and user_db.details:
@@ -87,7 +91,7 @@ def start(update, context, session):
         session.commit()
 
         update.message.reply_text(HELLO_GREETING.format(
-            user.first_name), **DEFAULT_REPLY_MARKUP)
+            first_name), **DEFAULT_REPLY_MARKUP)
 
         return MAIN
     else:
@@ -105,10 +109,19 @@ def about(update, context):
     return MAIN
 
 
-def helps(update, context):
+@db_session
+def helps(update, context, session):
     user = update.message.from_user
+    chat_id = update.message.chat_id
+
+    user_db = session.query(User).filter(User.chat_id == chat_id).first()
+
+    first_name = user.first_name
+    if user_db.details:
+        first_name = user_db.details.name
+
     update.message.reply_text(HELP_MESSAGE.format(
-        user.first_name), **DEFAULT_REPLY_MARKUP)
+        first_name), **DEFAULT_REPLY_MARKUP)
 
     return MAIN
 
@@ -121,8 +134,6 @@ def rules(update, context):
 
 @db_session
 def status(update, context, session):
-    user = update.message.from_user
-
     chat_id = update.message.chat_id
     cur_user = session.query(User).filter(User.chat_id == chat_id).first()
 
@@ -215,7 +226,6 @@ def check_admin(update, context, session):
 @db_session
 @handle_edited_message
 def send_trainer(update, context, session):
-    user = update.message.from_user
     chat_id = update.message.chat_id
     cur_user_id = session.query(User).filter(
         User.chat_id == chat_id).first().id
@@ -234,7 +244,6 @@ def send_trainer(update, context, session):
 @db_session
 @handle_edited_message
 def send_dragon(update, context, session):
-    user = update.message.from_user
     chat_id = update.message.chat_id
     dragon_id = session.query(User).filter(
         User.chat_id == chat_id).first().dragon_id
