@@ -1,14 +1,18 @@
+from dracobot2.utils import (SUPPORTED_MESSAGE_FILTERS, UNSUPPORTED_MESSAGE_FILTERS, forward_message,
+                             handle_edited_message, format_registered_message, delete_message, delete_message_reply)
+from dracobot2.resources import *
+from dracobot2.models import User, MsgFrom
+from dracobot2.config import SessionLocal
+from sqlalchemy.orm import scoped_session
+from sqlalchemy import or_
+from telegram.ext import (Updater, CommandHandler, MessageHandler, Filters,
+                          ConversationHandler)
+from telegram import (ReplyKeyboardMarkup, ReplyKeyboardRemove)
+import os
+import logging
 from dotenv import load_dotenv
 load_dotenv()
 
-import logging
-import os
-
-from telegram import (ReplyKeyboardMarkup, ReplyKeyboardRemove)
-from telegram.ext import (Updater, CommandHandler, MessageHandler, Filters,
-                          ConversationHandler)
-
-from dbhelper import *
 
 # Enable logging
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -18,261 +22,312 @@ logger = logging.getLogger(__name__)
 
 TOKEN = os.environ['TELEGRAM_BOT_TOKEN']
 
-MAIN, CHAT, CHAT_LOGIN, DRAGON_CHAT, TRAINER_CHAT = range(5)
+UNREGISTERED, MAIN, CHAT, CHAT_LOGIN, DRAGON_CHAT, TRAINER_CHAT, ADMIN_CHAT = range(
+    7)
 
-user_db = userdb()
-am_db = amdb()
+KEYBOARD_OPTIONS = [[DRAGON_CHAT_KEY], [TRAINER_CHAT_KEY],
+                    [HELP_KEY, STATUS_KEY], [RULES_KEY, ABOUT_THE_BOT_KEY]]
+DEFAULT_REPLY_MARKUP = {'reply_markup': ReplyKeyboardMarkup(
+    KEYBOARD_OPTIONS, one_time_keyboard=True)}
+REMOVE_REPLY_MARKUP = {'reply_markup': ReplyKeyboardRemove()}
 
-# EMOJI UNICODE
-CAKE = u"\U0001F382"
-WHALE = u"\U0001F40B"
-ROBOT = u"\U0001F916"
-SKULL = u"\U0001F480"
-SMILEY = u"\U0001F642"
-SPOUTING_WHALE = u"\U0001F433"
-SPEECH_BUBBLE = u"\U0001F4AC"
-THINKING_FACE = u"\U0001F914"
-QUESTION_MARK = u"\U0001F64F"
-MONKEY = u"\U0001F64A"
-DRAGON = u"\U0001F432" #In use for Dragon Trainer Bot
-BLUE_HEART = u"\U0001F499"
 
-# TELEGRAM KEYBOARD KEYS
-ABOUT_THE_BOT_KEY = u"About the Bot" + " " + DRAGON
-ADMIN_KEY = u"admin"
-ANONYMOUS_CHAT_KEY = u"Dragon-Trainer Anonymous Chat" + " " + SPEECH_BUBBLE
-HELP_KEY = u"Help" + " " + QUESTION_MARK
-RULES_KEY = u"Rules" + " " + MONKEY
-MENU_KEY = u"mainmenu"
-TRAINER_KEY = u"trainer"
-DRAGON_KEY = u"dragon"
-SEND_ALL_KEY = u"Send_All"
-SEND_ONE_KEY = u"Send_One"
-CHECK_REGIS_KEY = u"Check_Player_Registration"
-DONE_KEY = u"done"
+END = ConversationHandler.END
+TIMEOUT = ConversationHandler.TIMEOUT
 
-# GREETINGS
-ABOUT_THE_BOT = DRAGON + " *About DracoBot* " + DRAGON + "\n\n" + CAKE + " Birthday: June 2017\n\n" +\
-                ROBOT + " Currently maintained by Ji Cheng and Daniel Lau\n\n" + SKULL +\
-                " Past Bot Developers: Shao Yi, Bai Chuan, Fiz, Youkuan, Kang Ming, Zhi Yu\n\n"
-AM_GREETING = "Hello there, {}!\n\n" +\
-              "Click or type any of the following:\n" +\
-              "/trainer: Chat with your Trainer\n" +\
-              "/dragon: Chat with your Dragon\n" +\
-              "/mainmenu: Exits the Chat feature, and returns to the Main Menu"
+Session = scoped_session(SessionLocal)
 
-AM_LOGIN_GREETING = "Please enter your 4-character Game ID. (Remember Caps!)\n\n" +\
-                     "or click /mainmenu to exit the registration process"
-INVALID_PIN = "You have entered the wrong 4-character Game ID. Please try again, or type /mainmenu to exit."
-REDIRECT_GREETING = "Did you mean: /mainmenu"
-REQUEST_ADMIN_ID = "Please enter your Admin ID to proceed."
-SEND_ADMIN_GREETING = "Hello there, Administrator! What do you want to say to everyone?\n" +\
-                      "Whatever you submit from now on will be broadcasted to all users, be CAREFUL!" +\
-                      "Type /mainmenu to exit, once you have made your announcement."
-SEND_CONNECTION_FAILED = u"This feature is unavailable now as he/she has yet to sign in to the game." +\
-                         u" Please be patient and try again soon!" + SMILEY + "\n\nType /mainmenu to go back."
-SUCCESSFUL_TRAINER_CONNECTION = "You have been connected with your Trainer." +\
-                            " Anything you type here will be sent anonymously to him/her.\n" +\
-                            "To exit, type /done"
-SUCCESSFUL_DRAGON_CONNECTION = "You have been connected with your Dragon." +\
-                               " Anything you type here will be sent anonymously to him/her.\n" +\
-                               "To exit, type /done"
-HELLO_GREETING = "Hello there, {}! DracoBot at your service! Press /mainmenu to bring up keyboard! " + DRAGON
-HELP_MESSAGE = "Hello there, {}!\n\n" +\
-               "Dragon Trainer Bot is a homegrown telegram bot that allows you to anonymously chat with your Dragon or Trainer.\n\n" +\
-               "While in the Main Menu, click on:\n" +\
-               ANONYMOUS_CHAT_KEY + ": To chat with your Dragon or Trainer\n" +\
-               ABOUT_THE_BOT_KEY + ": To view information about the bot\n" +\
-               HELP_KEY + ": To explore this bot's functionality\n" +\
-               RULES_KEY + ": To view the game rules\n\n" +\
-               "While in the Chat feature, type any of the following to:\n" +\
-               TRAINER_KEY + ": Chat with your Trainer\n" +\
-               DRAGON_KEY + ": Chat with your Dragon\n\n" +\
-               "Type " + MENU_KEY + " at any point in time to exit the Chat feature, and return to the Main Menu\n\n" +\
-               "Please message @JichNgan @dlau98 if you need technical assistance!\n" +\
-               "Thank you and we hope you'll have fun throughout this game! :)"
-GAME_RULES_MESSAGE = "Rules of Dragons and Trainers" + DRAGON + "\n\n" +\
-                     "Each of you who participated will be assigned an Angel (Trainer) and a Mortal (Dragon). " +\
-                     "Of course, you will know the identity of your Dragon while your Trainer’s identity will be kept " +\
-                     "from you. Throughout the course of the event, feel free to chat with both your Dragon and Trainer " +\
-                     "through telegram bot where your identity will be kept secret, and take care of your dragonwith " +\
-                     "anonymous gift and pranks according to their indicated tolerance levels! " +\
-                     "Of course, you can look forward to seeing what your own trainer does for you as well!\n\n" +\
-                     "Explanation for tolerance levels\n\n" +\
-                     "1: Gift Exchange, do nice things only!\n" +\
-                     "2: Pranks are to be minimal, and no clean up required!\n" +\
-                     "3: Pranks are fine, but do take care of what your dragon says is OFF LIMITS\n\n" +\
-                     "Dos :)\n" +\
-                     "• Observe the Tolerance Levels your dragons have indicated.\n" +\
-                     "• Try to accommodate (if any) requests of your dragons e.g. avoid allergies\n" +\
-                     "• Balance out the pranks with gifts - moderation is key!\n" +\
-                     "• Try (your best) to keep your identity hidden.\n" +\
-                     "• Be active in the event! :)\n" +\
-                     "• Share your pranks and gifts throughout the event in the Draco group chat!\n\n" +\
-                     "Don'ts :(\n" +\
-                     "• Cause major damage (eg. breaking a treasured object) even if they’ve indicated no boundaries.\n" +\
-                     "• Flout other RC/NUS rules (e.g. theft, possession of alcohol *ahem ahem*).\n" +\
-                     "• Cause major inconveniences, especially along the common corridor" +\
-                     "(e.g. blockade the walkway, pranks involving powdered substances like flour or curry powder).\n" +\
-                     "• Cause fire hazards and hinder evacuation routes.\n" +\
-                     "• Write, draw or scribble any obscene/vulgar contents on doors/common area.\n\n" +\
-                     "**IMPORTANT!**\n\n" +\
-                     "NO LIVE ANIMALS OR INSECTS\n" +\
-                     "NO MOVING OF FURNITURE OUT OF THE ROOMS\n\n" +\
-                     "If you have any other questions, concerns or doubts, don’t be afraid to reach out to the" +\
-                     " organizing comm! We hope you have fun and make new friends as well!\n\n" +\
-                     "Love,\n" +\
-                     "Draco House Comm" + BLUE_HEART
+CHAT_TIMEOUT_SECONDS = 10 * 60
 
-KEYBOARD_OPTIONS = [[ANONYMOUS_CHAT_KEY], [ABOUT_THE_BOT_KEY], [HELP_KEY], [RULES_KEY]]
 
-DT1 = ['ABCD', 'BCDE', 'CDEF']
-DT2 = []
-DT3 = []
-DT4 = []
-DT5 = []
-DT6 = []
-DT7 = []
-DT8 = []
-DT9 = []
+def db_session(method):
+    def db_session_decorator(update, context):
+        session = Session()
+        return_value = method(update, context, session)
+        session.close()
+        return return_value
+    return db_session_decorator
 
-DT = [DT1, DT2, DT3, DT4, DT5, DT6, DT7, DT8, DT9]
 
-DRAGON_LIST = {}
-TRAINER_LIST = {}
-
-for dt_list in DT:
-    for i in range(0, len(dt_list)):
-        DRAGON_LIST[dt_list[i - 1]] = dt_list[i]
-        TRAINER_LIST[dt_list[i]] = dt_list[i - 1]
-
-def start(update, context):
+@db_session
+@handle_edited_message
+def start(update, context, session):
+    chat_id = update.message.chat_id
     user = update.message.from_user
 
-    update.message.reply_text(HELLO_GREETING.format(user.first_name),
-        reply_markup=ReplyKeyboardMarkup(KEYBOARD_OPTIONS, one_time_keyboard=True))
+    user_db = session.query(User).filter(
+        or_(User.tele_handle == user.username, User.chat_id == chat_id)).first()
+
+    if user_db is not None:
+        is_new_user = not user_db.registered
+
+        if user_db.chat_id != chat_id:
+            user_db.chat_id = chat_id
+        if not user_db.registered:
+            user_db.registered = True
+
+        user_db.tele_handle = user.username
+        user_db.tele_name = user.first_name
+
+        first_name = user.first_name
+        if user_db.details:
+            first_name = user_db.details.name
+
+        if is_new_user:
+            dragon = user_db.dragon
+            if dragon and dragon.details and user_db.details:
+                update.message.reply_text(WELCOME_MESSAGE.format(**{
+                    'name': user_db.details.name,
+                    'dragon_name': dragon.details.name,
+                    'dragon_room_number': dragon.details.room_number,
+                    'dragon_likes': dragon.details.likes,
+                    'dragon_dislikes': dragon.details.dislikes,
+                    'dragon_requests': dragon.details.requests,
+                    'dragon_level': dragon.details.level
+                }))
+            else:
+                update.message.reply_text(USER_NO_DRAGON)
+
+        session.commit()
+
+        update.message.reply_text(HELLO_GREETING.format(
+            first_name), **DEFAULT_REPLY_MARKUP)
+
+        return MAIN
+    else:
+        update.message.reply_text(USER_UNREGISTERED)
+
+        if user.username is None:
+            update.message.reply_text(USER_NO_TELE_HANDLE)
+
+        return UNREGISTERED
+
+
+def about(update, context):
+    update.message.reply_text(ABOUT_THE_BOT, **DEFAULT_REPLY_MARKUP)
 
     return MAIN
 
-def about(update, context):
-    update.message.reply_text(ABOUT_THE_BOT, reply_markup=ReplyKeyboardRemove())
 
-    return start(update, context)
-
-def helps(update, context):
+@db_session
+def helps(update, context, session):
     user = update.message.from_user
+    chat_id = update.message.chat_id
 
-    update.message.reply_text(HELP_MESSAGE.format(user.first_name), reply_markup=ReplyKeyboardRemove())
+    user_db = session.query(User).filter(User.chat_id == chat_id).first()
 
-    return start(update, context)
+    first_name = user.first_name
+    if user_db.details:
+        first_name = user_db.details.name
+
+    update.message.reply_text(HELP_MESSAGE.format(
+        first_name), **DEFAULT_REPLY_MARKUP)
+
+    return MAIN
+
 
 def rules(update, context):
-    update.message.reply_text(GAME_RULES_MESSAGE, reply_markup=ReplyKeyboardRemove())
+    update.message.reply_text(GAME_RULES_MESSAGE, **DEFAULT_REPLY_MARKUP)
 
-    return start(update, context)
+    return MAIN
 
-def anonymous_chat(update, context):
-    user = update.message.from_user
-    existing_user = am_db.get_user_record_from_user_chat_id(user.id)
 
-    if existing_user is not None:
-        update.message.reply_text(AM_GREETING.format(user.first_name), reply_markup=ReplyKeyboardRemove())
-        return CHAT
+@db_session
+def status(update, context, session):
+    chat_id = update.message.chat_id
+    cur_user = session.query(User).filter(User.chat_id == chat_id).first()
+
+    trainer = session.query(User).filter(User.dragon_id == cur_user.id).first()
+    dragon = session.query(User).filter(User.id == cur_user.dragon_id).first()
+
+    dragon_details = None
+    if dragon and dragon.details:
+        dragon_details = {
+            'name': dragon.details.name,
+            'likes': dragon.details.likes,
+            'dislikes': dragon.details.dislikes,
+            'room_number': dragon.details.room_number,
+            'requests': dragon.details.requests,
+            'level': dragon.details.level
+        }
+
+    t_registered = format_registered_message(trainer)
+    d_registered = format_registered_message(dragon)
+
+    message = STATUS.format(**{
+        'trainer_status': t_registered,
+        'dragon_status': d_registered
+    })
+
+    if dragon_details is not None:
+        message += '\n' + DRAGON_DETAILS.format(**dragon_details)
+
+    update.message.reply_text(message, **DEFAULT_REPLY_MARKUP)
+
+    return MAIN
+
+
+@db_session
+def check_trainer(update, context, session):
+    chat_id = update.message.chat_id
+    cur_user_id = session.query(User).filter(
+        User.chat_id == chat_id).first().id
+
+    trainer = session.query(User).filter(User.dragon_id == cur_user_id).first()
+
+    if trainer is None:
+        update.message.reply_text(USER_NO_TRAINER, **DEFAULT_REPLY_MARKUP)
+        return MAIN
+    elif not trainer.registered:
+        update.message.reply_text(
+            USER_UNREGISTERED_TRAINER, **DEFAULT_REPLY_MARKUP)
+        return MAIN
     else:
-        update.message.reply_text(AM_LOGIN_GREETING.format(user.first_name), reply_markup=ReplyKeyboardRemove())
-        return CHAT_LOGIN
+        update.message.reply_text(
+            CONNECTION_SUCCESS.format(TRAINER_KEY), **REMOVE_REPLY_MARKUP)
+        return TRAINER_CHAT
 
-def trainer(update, context):
-    update.message.reply_text(SUCCESSFUL_TRAINER_CONNECTION, reply_markup=ReplyKeyboardRemove())
 
-    user = update.message.from_user
-    existing_user = am_db.get_user_record_from_user_chat_id(user.id)
-    game_id = existing_user[1]
-    
-    if game_id in TRAINER_LIST:
-        trainer_game_id = TRAINER_LIST[game_id]
-        trainer_user = am_db.get_user_record_from_game_id(trainer_game_id)
-        if trainer_user is not None:
-            update.message.reply_text(SUCCESSFUL_TRAINER_CONNECTION, reply_markup=ReplyKeyboardRemove())
-            return TRAINER_CHAT
+@db_session
+def check_dragon(update, context, session):
+    chat_id = update.message.chat_id
+    dragon_id = session.query(User).filter(
+        User.chat_id == chat_id).first().dragon_id
 
-    update.message.reply_text(SEND_CONNECTION_FAILED, reply_markup=ReplyKeyboardRemove())
-    return anonymous_chat(update, context)
+    dragon = session.query(User).filter(User.id == dragon_id).first()
 
-def dragon(update, context):
-    user = update.message.from_user
-    existing_user = am_db.get_user_record_from_user_chat_id(user.id)
-    game_id = existing_user[1]
-    
-    if game_id in DRAGON_LIST:
-        dragon_game_id = DRAGON_LIST[game_id]
-        dragon_user = am_db.get_user_record_from_game_id(dragon_game_id)
-        if dragon_user is not None:
-            update.message.reply_text(SUCCESSFUL_DRAGON_CONNECTION, reply_markup=ReplyKeyboardRemove())
-            return DRAGON_CHAT
+    if dragon is None:
+        update.message.reply_text(USER_NO_DRAGON, **DEFAULT_REPLY_MARKUP)
+        return MAIN
+    elif not dragon.registered:
+        update.message.reply_text(
+            USER_UNREGISTERED_DRAGON, **DEFAULT_REPLY_MARKUP)
+        return MAIN
+    else:
+        update.message.reply_text(
+            CONNECTION_SUCCESS.format(DRAGON_KEY), **REMOVE_REPLY_MARKUP)
+        return DRAGON_CHAT
 
-    update.message.reply_text(SEND_CONNECTION_FAILED, reply_markup=ReplyKeyboardRemove())
-    return anonymous_chat(update, context)
 
-def send_trainer(update, context):
-    user = update.message.from_user
-    existing_user = am_db.get_user_record_from_user_chat_id(user.id)
-    game_id = existing_user[1]
-    
-    if game_id in TRAINER_LIST:
-        trainer_game_id = TRAINER_LIST[game_id]
-        # TODO: Cache DB
-        trainer_user = am_db.get_user_record_from_game_id(trainer_game_id)
-        trainer_id = trainer_user[2]
+@db_session
+def check_admin(update, context, session):
+    chat_id = update.message.chat_id
+    user_db = session.query(User).filter(
+        User.chat_id == chat_id).first()
 
-        if trainer_user is not None:
-            context.bot.send_message(chat_id=trainer_id, text="From your Trainer:\n" + update.message.text)
-            return TRAINER_CHAT
+    if user_db and user_db.is_admin:
+        update.message.reply_text(ADMIN_GREETING)
+        return ADMIN_CHAT
 
-    update.message.reply_text(SEND_CONNECTION_FAILED, reply_markup=ReplyKeyboardRemove())
-    return CHAT
+    update.message.reply_text(UNKNOWN_COMMAND)
+    return MAIN
 
-def send_dragon(update, context):
-    user = update.message.from_user
-    existing_user = am_db.get_user_record_from_user_chat_id(user.id)
-    game_id = existing_user[1]
-    
-    if game_id in DRAGON_LIST:
-        dragon_game_id = DRAGON_LIST[game_id]
-        # TODO: Cache DB
-        dragon_user = am_db.get_user_record_from_game_id(dragon_game_id)
-        dragon_id = dragon_user[2]
 
-        if dragon_user is not None:
-            context.bot.send_message(chat_id=dragon_id, text="From your Dragon:\n" + update.message.text)
-            return DRAGON_CHAT
+@db_session
+@handle_edited_message
+def send_trainer(update, context, session):
+    chat_id = update.message.chat_id
+    cur_user_id = session.query(User).filter(
+        User.chat_id == chat_id).first().id
 
-    update.message.reply_text(SEND_CONNECTION_FAILED, reply_markup=ReplyKeyboardRemove())
-    return CHAT
+    trainer = session.query(User).filter(User.dragon_id == cur_user_id).first()
 
-def done_chat(update, context):
-    update.message.reply_text("Done chatting", reply_markup=ReplyKeyboardRemove())
+    if trainer is not None:
+        forward_message(update.message, trainer.chat_id,
+                        context.bot, session, message_from=MsgFrom.DRAGON)
+        return TRAINER_CHAT
+    else:
+        update.message.reply_text(CONNECTION_ERROR, **REMOVE_REPLY_MARKUP)
+        return MAIN
 
-    return anonymous_chat(update, context)
 
-def register(update, context):
-    user = update.message.from_user
-    user_pin = update.message.text
-    if user_pin in DRAGON_LIST and user_pin in TRAINER_LIST:
-        am_db.register(user_pin, user.id, user.first_name)
-        update.message.reply_text(AM_GREETING.format(user.first_name), reply_markup=ReplyKeyboardRemove())
-        return CHAT
+@db_session
+@handle_edited_message
+def send_dragon(update, context, session):
+    chat_id = update.message.chat_id
+    dragon_id = session.query(User).filter(
+        User.chat_id == chat_id).first().dragon_id
 
-    update.message.reply_text(INVALID_PIN, reply_markup=ReplyKeyboardRemove())
-    return CHAT_LOGIN
+    dragon = session.query(User).filter(User.id == dragon_id).first()
 
-def cancel(update, context):
-    user = update.message.from_user
-    logger.info("User %s canceled the conversation.", user.first_name)
+    if dragon is not None:
+        forward_message(update.message, dragon.chat_id,
+                        context.bot, session, message_from=MsgFrom.TRAINER)
+        return DRAGON_CHAT
+    else:
+        update.message.reply_text(CONNECTION_ERROR, **REMOVE_REPLY_MARKUP)
+        return MAIN
 
-    return start(update, context)
 
-NON_COMMAND_REGEX = u'^[^\/]'
+@db_session
+@handle_edited_message
+def send_admin(update, context, session):
+    chat_id = update.message.chat_id
+    user_db = session.query(User).filter(User.chat_id == chat_id).first()
+
+    if not user_db.is_admin:
+        return MAIN
+
+    all_users = session.query(User).filter(User.registered == True).all()
+
+    for to_send_user in all_users:
+        if to_send_user.id != user_db.id:
+            forward_message(update.message, to_send_user.chat_id,
+                            context.bot, session, message_from=MsgFrom.ADMIN)
+
+    return ADMIN_CHAT
+
+
+@db_session
+@handle_edited_message
+def main_edited_message(update, context, session):
+    update.message.reply_text(UNKNOWN_COMMAND)
+
+    return MAIN
+
+
+@db_session
+def handle_delete_message(update, context, session):
+    delete_message_reply(update.message, context.bot, session)
+
+    return
+
+
+@db_session
+def handle_delete_admin(update, context, session):
+    if len(context.args) == 2:
+        chat_id, message_id = context.args
+        delete_message(update.message, message_id,
+                       chat_id, None, context.bot, session)
+    else:
+        delete_message_reply(update.message, context.bot, session)
+    return ADMIN_CHAT
+
+
+def unsupported_media(update, context):
+    update.message.reply_text(
+        UNSUPPORTED_MEDIA, reply_to_message_id=update.message.message_id, reply_markup=ReplyKeyboardRemove())
+
+    return
+
+
+def timeout_chat(target):
+    def inner_timeout_chat(update, context):
+        update.message.reply_text(
+            TIMEOUT_MESSAGE.format(target), **DEFAULT_REPLY_MARKUP)
+
+        return END
+    return inner_timeout_chat
+
+
+def done_chat(target):
+    def inner_done_chat(update, context):
+        update.message.reply_text(
+            CHAT_COMPLETE.format(target), **DEFAULT_REPLY_MARKUP)
+
+        return END
+    return inner_done_chat
+
 
 def main():
     # Create the Updater and pass it your bot's token.
@@ -283,35 +338,83 @@ def main():
     # Get the dispatcher to register handlers
     dp = updater.dispatcher
 
-    # Add conversation handler with the states GENDER, PHOTO, LOCATION and BIO
-    conv_handler = ConversationHandler(
-        entry_points=[CommandHandler('start', start)],
+    dragon_handler = ConversationHandler(
+        entry_points=[MessageHandler(Filters.regex(DRAGON_CHAT_KEY), check_dragon),
+                      CommandHandler(DRAGON_KEY, check_dragon)],
 
         states={
-            MAIN: [CommandHandler(MENU_KEY, start), 
-                    MessageHandler(Filters.regex(ABOUT_THE_BOT_KEY), about),
-                    MessageHandler(Filters.regex(HELP_KEY), helps),
-                    MessageHandler(Filters.regex(RULES_KEY), rules),
-                    MessageHandler(Filters.regex(ANONYMOUS_CHAT_KEY), anonymous_chat)],
-
-            CHAT: [CommandHandler(DRAGON_KEY, dragon),
-                    CommandHandler(TRAINER_KEY, trainer),
-                    CommandHandler(MENU_KEY, start)],
-
-            CHAT_LOGIN: [MessageHandler(Filters.regex(NON_COMMAND_REGEX), register)],
-
             # Chat with dragon
-            DRAGON_CHAT: [CommandHandler(MENU_KEY, start), 
-                            CommandHandler(DONE_KEY, done_chat),
-                            MessageHandler(Filters.regex(NON_COMMAND_REGEX), send_dragon)],
+            DRAGON_CHAT: [CommandHandler(DONE_KEY, done_chat(DRAGON_KEY)),
+                          CommandHandler(DELETE_KEY, handle_delete_message),
+                          MessageHandler(
+                              SUPPORTED_MESSAGE_FILTERS, send_dragon),
+                          MessageHandler(UNSUPPORTED_MESSAGE_FILTERS, unsupported_media)],
 
-            # Chat with trainer
-            TRAINER_CHAT: [CommandHandler(MENU_KEY, start), 
-                            CommandHandler(DONE_KEY, done_chat),
-                            MessageHandler(Filters.regex(NON_COMMAND_REGEX), send_trainer)],
+            TIMEOUT: [MessageHandler(
+                Filters.text | Filters.command, timeout_chat(DRAGON_KEY))]
         },
 
-        fallbacks=[CommandHandler('cancel', cancel)]
+        fallbacks=[],
+        conversation_timeout=CHAT_TIMEOUT_SECONDS
+    )
+
+    trainer_handler = ConversationHandler(
+        entry_points=[MessageHandler(Filters.regex(TRAINER_CHAT_KEY), check_trainer),
+                      CommandHandler(TRAINER_KEY, check_trainer)],
+
+        states={
+            # Chat with dragon
+            TRAINER_CHAT: [CommandHandler(DONE_KEY, done_chat(TRAINER_KEY)),
+                           CommandHandler(DELETE_KEY, handle_delete_message),
+                           MessageHandler(
+                               SUPPORTED_MESSAGE_FILTERS, send_trainer),
+                           MessageHandler(UNSUPPORTED_MESSAGE_FILTERS, unsupported_media)],
+
+            TIMEOUT: [MessageHandler(
+                Filters.text | Filters.command, timeout_chat(TRAINER_KEY))]
+        },
+
+        fallbacks=[],
+        conversation_timeout=CHAT_TIMEOUT_SECONDS
+    )
+
+    admin_handler = ConversationHandler(
+        entry_points=[CommandHandler(ADMIN_KEY, check_admin)],
+
+        states={
+            # Chat with dragon
+            ADMIN_CHAT: [CommandHandler(DONE_KEY, done_chat(ADMIN_KEY)),
+                         CommandHandler(DELETE_KEY, handle_delete_admin),
+                         MessageHandler(SUPPORTED_MESSAGE_FILTERS, send_admin),
+                         MessageHandler(UNSUPPORTED_MESSAGE_FILTERS, unsupported_media)],
+
+            TIMEOUT: [MessageHandler(
+                Filters.text | Filters.command, timeout_chat(ADMIN_KEY))]
+        },
+
+        fallbacks=[],
+        conversation_timeout=CHAT_TIMEOUT_SECONDS
+    )
+
+    conv_handler = ConversationHandler(
+        entry_points=[MessageHandler(Filters.all, start)],
+
+        states={
+            UNREGISTERED: [MessageHandler(Filters.all, start)],
+
+            MAIN: [dragon_handler,
+                   trainer_handler,
+                   admin_handler,
+                   CommandHandler(MENU_KEY, start),
+                   CommandHandler(DELETE_KEY, handle_delete_message),
+                   MessageHandler(Filters.regex(ABOUT_THE_BOT_KEY), about),
+                   MessageHandler(Filters.regex(HELP_KEY), helps),
+                   MessageHandler(Filters.regex(RULES_KEY), rules),
+                   MessageHandler(Filters.regex(STATUS_KEY), status),
+                   MessageHandler(SUPPORTED_MESSAGE_FILTERS, main_edited_message)],
+        },
+
+        fallbacks=[]
     )
 
     dp.add_handler(conv_handler)
@@ -327,9 +430,5 @@ def main():
 
 if __name__ == '__main__':
     logger.info("Initialised....")
-    user_db.setup()
-    logger.info("User database set up done.")
-    am_db.setup()
-    logger.info("AM database set up done.")
     logger.info("Starting main()...")
     main()
