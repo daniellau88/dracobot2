@@ -123,4 +123,4 @@ DELETE_MESSAGE_ERROR = "Message has been deleted."
 DELETE_MESSAGE_REPLY_ERROR = "Please reply a message to delete."
 UNKNOWN_COMMAND = "Unknown command. Press /" + \
     MENU_KEY + " to bring up keyboard."
-TIMEOUT_MESSAGE = "You are inactive for more than 10 minutes. You have been disconnected from your {} chat."
+TIMEOUT_MESSAGE = "You have been inactive for more than 10 minutes. You will be disconnected from the chat."

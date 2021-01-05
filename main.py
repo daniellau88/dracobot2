@@ -1,7 +1,6 @@
-from dracobot2.utils import (SUPPORTED_MESSAGE_FILTERS, UNSUPPORTED_MESSAGE_FILTERS, forward_message,
-                             handle_edited_message, format_registered_message, delete_message, delete_message_reply)
+from dracobot2.utils import *
 from dracobot2.resources import *
-from dracobot2.models import User, MsgFrom
+from dracobot2.models import User, Role
 from dracobot2.config import SessionLocal
 from sqlalchemy.orm import scoped_session
 from sqlalchemy import or_
@@ -50,7 +49,6 @@ def db_session(method):
 
 
 @db_session
-@handle_edited_message
 def start(update, context, session):
     chat_id = update.message.chat_id
     user = update.message.from_user
@@ -177,11 +175,11 @@ def check_trainer(update, context, session):
 
     if trainer is None:
         update.message.reply_text(USER_NO_TRAINER, **DEFAULT_REPLY_MARKUP)
-        return MAIN
+        return END
     elif not trainer.registered:
         update.message.reply_text(
             USER_UNREGISTERED_TRAINER, **DEFAULT_REPLY_MARKUP)
-        return MAIN
+        return END
     else:
         update.message.reply_text(
             CONNECTION_SUCCESS.format(TRAINER_KEY), **REMOVE_REPLY_MARKUP)
@@ -198,11 +196,11 @@ def check_dragon(update, context, session):
 
     if dragon is None:
         update.message.reply_text(USER_NO_DRAGON, **DEFAULT_REPLY_MARKUP)
-        return MAIN
+        return END
     elif not dragon.registered:
         update.message.reply_text(
             USER_UNREGISTERED_DRAGON, **DEFAULT_REPLY_MARKUP)
-        return MAIN
+        return END
     else:
         update.message.reply_text(
             CONNECTION_SUCCESS.format(DRAGON_KEY), **REMOVE_REPLY_MARKUP)
@@ -212,38 +210,17 @@ def check_dragon(update, context, session):
 @db_session
 def check_admin(update, context, session):
     chat_id = update.message.chat_id
-    user_db = session.query(User).filter(
-        User.chat_id == chat_id).first()
+    user_db = session.query(User).filter(User.chat_id == chat_id).first()
 
     if user_db and user_db.is_admin:
         update.message.reply_text(ADMIN_GREETING)
         return ADMIN_CHAT
 
     update.message.reply_text(UNKNOWN_COMMAND)
-    return MAIN
+    return END
 
 
-@db_session
-@handle_edited_message
-def send_trainer(update, context, session):
-    chat_id = update.message.chat_id
-    cur_user_id = session.query(User).filter(
-        User.chat_id == chat_id).first().id
-
-    trainer = session.query(User).filter(User.dragon_id == cur_user_id).first()
-
-    if trainer is not None:
-        forward_message(update.message, trainer.chat_id,
-                        context.bot, session, message_from=MsgFrom.DRAGON)
-        return TRAINER_CHAT
-    else:
-        update.message.reply_text(CONNECTION_ERROR, **REMOVE_REPLY_MARKUP)
-        return MAIN
-
-
-@db_session
-@handle_edited_message
-def send_dragon(update, context, session):
+def send_message_to_dragon(update, context, session):
     chat_id = update.message.chat_id
     dragon_id = session.query(User).filter(
         User.chat_id == chat_id).first().dragon_id
@@ -252,45 +229,93 @@ def send_dragon(update, context, session):
 
     if dragon is not None:
         forward_message(update.message, dragon.chat_id,
-                        context.bot, session, message_from=MsgFrom.TRAINER)
+                        context.bot, session, message_from=Role.TRAINER)
         return DRAGON_CHAT
     else:
         update.message.reply_text(CONNECTION_ERROR, **REMOVE_REPLY_MARKUP)
-        return MAIN
+        return END
+
+
+def send_message_to_trainer(update, context, session):
+    chat_id = update.message.chat_id
+    cur_user_id = session.query(User).filter(
+        User.chat_id == chat_id).first().id
+
+    trainer = session.query(User).filter(User.dragon_id == cur_user_id).first()
+
+    if trainer is not None:
+        forward_message(update.message, trainer.chat_id,
+                        context.bot, session, message_from=Role.DRAGON)
+        return TRAINER_CHAT
+    else:
+        update.message.reply_text(CONNECTION_ERROR, **REMOVE_REPLY_MARKUP)
+        return END
 
 
 @db_session
-@handle_edited_message
+def send_trainer(update, context, session):
+    return send_message_to_trainer(update, context, session)
+
+
+@db_session
+def send_dragon(update, context, session):
+    return send_message_to_dragon(update, context, session)
+
+
+@db_session
 def send_admin(update, context, session):
     chat_id = update.message.chat_id
     user_db = session.query(User).filter(User.chat_id == chat_id).first()
 
     if not user_db.is_admin:
-        return MAIN
+        return END
 
     all_users = session.query(User).filter(User.registered == True).all()
 
     for to_send_user in all_users:
         if to_send_user.id != user_db.id:
             forward_message(update.message, to_send_user.chat_id,
-                            context.bot, session, message_from=MsgFrom.ADMIN)
+                            context.bot, session, message_from=Role.ADMIN)
 
     return ADMIN_CHAT
 
 
-@db_session
-@handle_edited_message
-def main_edited_message(update, context, session):
-    update.message.reply_text(UNKNOWN_COMMAND)
+def handle_reply_message(current_mode):
+    @db_session
+    def inner_reply_message(update, context, session):
+        new_mode = check_reply_mapping(update.message, session)
+        ret_value = END
 
-    return MAIN
+        if new_mode == Role.TRAINER or (new_mode is None and current_mode == Role.TRAINER):
+            ret_value = send_message_to_trainer(update, context, session)
+        elif new_mode == Role.DRAGON or (new_mode is None and current_mode == Role.DRAGON):
+            ret_value = send_message_to_dragon(update, context, session)
+
+        if new_mode is not None:
+            if current_mode is None:
+                update.message.reply_text("This message has been sent. You are now chatting with your " + (
+                    "Dragon" if new_mode == Role.DRAGON else "Trainer") + ". Send /done when you are done.", reply_to_message_id=update.message.message_id),
+            elif current_mode != new_mode:
+                update.message.reply_text(
+                    "Changed mode to " + ("Dragon" if new_mode == Role.DRAGON else "Trainer"))
+
+        return ret_value
+    return inner_reply_message
+
+
+@db_session
+def handle_edited_message(update, context, session):
+    edit_message(update, context, session)
 
 
 @db_session
 def handle_delete_message(update, context, session):
     delete_message_reply(update.message, context.bot, session)
 
-    return
+
+@db_session
+def unknown_message(update, context, session):
+    update.message.reply_text(UNKNOWN_COMMAND)
 
 
 @db_session
@@ -308,16 +333,11 @@ def unsupported_media(update, context):
     update.message.reply_text(
         UNSUPPORTED_MEDIA, reply_to_message_id=update.message.message_id, reply_markup=ReplyKeyboardRemove())
 
-    return
 
+def handle_timeout_chat(update, context):
+    update.message.reply_text(TIMEOUT_MESSAGE, **DEFAULT_REPLY_MARKUP)
 
-def timeout_chat(target):
-    def inner_timeout_chat(update, context):
-        update.message.reply_text(
-            TIMEOUT_MESSAGE.format(target), **DEFAULT_REPLY_MARKUP)
-
-        return END
-    return inner_timeout_chat
+    return END
 
 
 def done_chat(target):
@@ -338,83 +358,89 @@ def main():
     # Get the dispatcher to register handlers
     dp = updater.dispatcher
 
-    dragon_handler = ConversationHandler(
+    chat_handler = ConversationHandler(
         entry_points=[MessageHandler(Filters.regex(DRAGON_CHAT_KEY), check_dragon),
-                      CommandHandler(DRAGON_KEY, check_dragon)],
+                      CommandHandler(DRAGON_KEY, check_dragon),
+                      MessageHandler(Filters.regex(
+                          TRAINER_CHAT_KEY), check_trainer),
+                      CommandHandler(TRAINER_KEY, check_trainer),
+                      MessageHandler(Filters.reply, handle_reply_message(None)), ],
 
         states={
             # Chat with dragon
-            DRAGON_CHAT: [CommandHandler(DONE_KEY, done_chat(DRAGON_KEY)),
+            DRAGON_CHAT: [MessageHandler(Filters.update.edited_message,
+                                         handle_edited_message),
+                          CommandHandler(DONE_KEY, done_chat(DRAGON_KEY)),
                           CommandHandler(DELETE_KEY, handle_delete_message),
+                          MessageHandler(
+                              Filters.reply, handle_reply_message(Role.DRAGON)),
                           MessageHandler(
                               SUPPORTED_MESSAGE_FILTERS, send_dragon),
                           MessageHandler(UNSUPPORTED_MESSAGE_FILTERS, unsupported_media)],
 
-            TIMEOUT: [MessageHandler(
-                Filters.text | Filters.command, timeout_chat(DRAGON_KEY))]
-        },
-
-        fallbacks=[],
-        conversation_timeout=CHAT_TIMEOUT_SECONDS
-    )
-
-    trainer_handler = ConversationHandler(
-        entry_points=[MessageHandler(Filters.regex(TRAINER_CHAT_KEY), check_trainer),
-                      CommandHandler(TRAINER_KEY, check_trainer)],
-
-        states={
-            # Chat with dragon
-            TRAINER_CHAT: [CommandHandler(DONE_KEY, done_chat(TRAINER_KEY)),
+            # Chat with trainer
+            TRAINER_CHAT: [MessageHandler(Filters.update.edited_message,
+                                          handle_edited_message),
+                           CommandHandler(DONE_KEY, done_chat(TRAINER_KEY)),
                            CommandHandler(DELETE_KEY, handle_delete_message),
+                           MessageHandler(
+                               Filters.reply, handle_reply_message(Role.TRAINER)),
                            MessageHandler(
                                SUPPORTED_MESSAGE_FILTERS, send_trainer),
                            MessageHandler(UNSUPPORTED_MESSAGE_FILTERS, unsupported_media)],
 
             TIMEOUT: [MessageHandler(
-                Filters.text | Filters.command, timeout_chat(TRAINER_KEY))]
+                Filters.text | Filters.command, handle_timeout_chat)]
         },
 
         fallbacks=[],
-        conversation_timeout=CHAT_TIMEOUT_SECONDS
+        conversation_timeout=CHAT_TIMEOUT_SECONDS,
+        map_to_parent={
+            END: MAIN,
+        }
     )
 
     admin_handler = ConversationHandler(
         entry_points=[CommandHandler(ADMIN_KEY, check_admin)],
 
         states={
-            # Chat with dragon
-            ADMIN_CHAT: [CommandHandler(DONE_KEY, done_chat(ADMIN_KEY)),
+            ADMIN_CHAT: [MessageHandler(Filters.update.edited_message,
+                                        handle_edited_message),
+                         CommandHandler(DONE_KEY, done_chat(ADMIN_KEY)),
                          CommandHandler(DELETE_KEY, handle_delete_admin),
                          MessageHandler(SUPPORTED_MESSAGE_FILTERS, send_admin),
                          MessageHandler(UNSUPPORTED_MESSAGE_FILTERS, unsupported_media)],
 
             TIMEOUT: [MessageHandler(
-                Filters.text | Filters.command, timeout_chat(ADMIN_KEY))]
+                Filters.text | Filters.command, handle_timeout_chat)]
         },
 
         fallbacks=[],
-        conversation_timeout=CHAT_TIMEOUT_SECONDS
+        conversation_timeout=CHAT_TIMEOUT_SECONDS,
+        map_to_parent={
+            END: MAIN,
+        }
     )
 
     conv_handler = ConversationHandler(
-        entry_points=[MessageHandler(Filters.all, start)],
+        entry_points=[MessageHandler(Filters.update.edited_message, handle_edited_message),
+                      MessageHandler(Filters.all, start), ],
 
         states={
             UNREGISTERED: [MessageHandler(Filters.all, start)],
 
-            MAIN: [dragon_handler,
-                   trainer_handler,
+            MAIN: [MessageHandler(Filters.update.edited_message, handle_edited_message),
+                   chat_handler,
                    admin_handler,
                    CommandHandler(MENU_KEY, start),
                    CommandHandler(DELETE_KEY, handle_delete_message),
                    MessageHandler(Filters.regex(ABOUT_THE_BOT_KEY), about),
                    MessageHandler(Filters.regex(HELP_KEY), helps),
                    MessageHandler(Filters.regex(RULES_KEY), rules),
-                   MessageHandler(Filters.regex(STATUS_KEY), status),
-                   MessageHandler(SUPPORTED_MESSAGE_FILTERS, main_edited_message)],
+                   MessageHandler(Filters.regex(STATUS_KEY), status)],
         },
 
-        fallbacks=[]
+        fallbacks=[MessageHandler(Filters.all, unknown_message)]
     )
 
     dp.add_handler(conv_handler)

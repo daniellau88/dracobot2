@@ -7,7 +7,7 @@ from sqlalchemy.ext.declarative import declarative_base
 Base = declarative_base()
 
 
-class MsgFrom(enum.Enum):
+class Role(enum.Enum):
     DRAGON = 1
     TRAINER = 2
     ADMIN = 3
@@ -57,4 +57,4 @@ class MessageMapping(Base):
     receiver_caption_message_id = Column(Integer, nullable=True)
     deleted = Column(Boolean, nullable=False,
                      default=False, server_default="0")
-    message_from = Column(Enum(MsgFrom), nullable=False)
+    message_from = Column(Enum(Role), nullable=False)
