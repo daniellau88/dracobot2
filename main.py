@@ -293,11 +293,9 @@ def handle_reply_message(current_mode):
 
         if new_mode is not None:
             if current_mode is None:
-                update.message.reply_text("This message has been sent. You are now chatting with your " + (
-                    "Dragon" if new_mode == Role.DRAGON else "Trainer") + ". Send /done when you are done.", reply_to_message_id=update.message.message_id),
+                update.message.reply_text(USER_REPLY_SHORTCUT.format(TRAINER_KEY if new_mode == Role.TRAINER else DRAGON_KEY)),
             elif current_mode != new_mode:
-                update.message.reply_text(
-                    "Changed mode to " + ("Dragon" if new_mode == Role.DRAGON else "Trainer"))
+                update.message.reply_text(USER_REPLY_CHANGE_MODE.format(TRAINER_KEY if new_mode == Role.TRAINER else DRAGON_KEY))
 
         return ret_value
     return inner_reply_message
@@ -372,6 +370,7 @@ def main():
                                          handle_edited_message),
                           CommandHandler(DONE_KEY, done_chat(DRAGON_KEY)),
                           CommandHandler(DELETE_KEY, handle_delete_message),
+                          MessageHandler(Filters.command, unknown_message),
                           MessageHandler(
                               Filters.reply, handle_reply_message(Role.DRAGON)),
                           MessageHandler(
@@ -383,6 +382,7 @@ def main():
                                           handle_edited_message),
                            CommandHandler(DONE_KEY, done_chat(TRAINER_KEY)),
                            CommandHandler(DELETE_KEY, handle_delete_message),
+                           MessageHandler(Filters.command, unknown_message),
                            MessageHandler(
                                Filters.reply, handle_reply_message(Role.TRAINER)),
                            MessageHandler(

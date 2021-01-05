@@ -108,6 +108,8 @@ CONNECTION_SUCCESS = "You have been connected with your {}." +\
     " Anything you type here will be sent anonymously to him/her.\n" +\
     "To exit, type /" + DONE_KEY
 DELETE_MESSAGE_SUCCESS = "Message deleted."
+USER_REPLY_SHORTCUT = "This message has been sent. You are currently connected with your {}. Send /done when you are done."
+USER_REPLY_CHANGE_MODE = "You are currently connected with your {}. Send /done when you are done."
 
 # Error Messages
 USER_UNREGISTERED = "You have not been registered. Press /start once you have registered."
