@@ -327,6 +327,11 @@ def unknown_message(update, context):
     update.message.reply_text(UNKNOWN_COMMAND)
 
 
+def handle_unknown_message_chat(target):
+    def unknown_message_chat(update, context):
+        update.message.reply_text(UNKNOWN_CHAT_COMMAND.format(target))
+    return unknown_message_chat
+
 @run_async
 @db_session
 def handle_delete_admin(update, context, session):
@@ -382,7 +387,8 @@ def main():
                                          handle_edited_message),
                           CommandHandler(DONE_KEY, done_chat(DRAGON_KEY)),
                           CommandHandler(DELETE_KEY, handle_delete_message),
-                          MessageHandler(Filters.command, unknown_message),
+                          MessageHandler(
+                              Filters.command, handle_unknown_message_chat(DRAGON_KEY)),
                           MessageHandler(
                               Filters.reply, handle_reply_message(Role.DRAGON)),
                           MessageHandler(
@@ -394,7 +400,8 @@ def main():
                                           handle_edited_message),
                            CommandHandler(DONE_KEY, done_chat(TRAINER_KEY)),
                            CommandHandler(DELETE_KEY, handle_delete_message),
-                           MessageHandler(Filters.command, unknown_message),
+                           MessageHandler(
+                               Filters.command, handle_unknown_message_chat(TRAINER_KEY)),
                            MessageHandler(
                                Filters.reply, handle_reply_message(Role.TRAINER)),
                            MessageHandler(
@@ -420,6 +427,8 @@ def main():
                                         handle_edited_message),
                          CommandHandler(DONE_KEY, done_chat(ADMIN_KEY)),
                          CommandHandler(DELETE_KEY, handle_delete_admin),
+                         MessageHandler(
+                             Filters.command, handle_unknown_message_chat(ADMIN_KEY)),
                          MessageHandler(SUPPORTED_MESSAGE_FILTERS, send_admin),
                          MessageHandler(UNSUPPORTED_MESSAGE_FILTERS, unsupported_media)],
 
