@@ -1,7 +1,7 @@
 import enum
 from sqlalchemy.types import Enum
 from sqlalchemy.orm import relationship, backref
-from sqlalchemy import Column, Integer, String, ForeignKey, Text, Boolean
+from sqlalchemy import Column, Integer, String, ForeignKey, UnicodeText, Boolean
 from sqlalchemy.ext.declarative import declarative_base
 
 Base = declarative_base()
@@ -37,10 +37,10 @@ class UserDetails(Base):
     user_id = Column(Integer, ForeignKey(User.id),
                      primary_key=True, nullable=False)
     name = Column(String(100))
-    likes = Column(Text)
-    dislikes = Column(Text)
-    room_number = Column(String(6))
-    requests = Column(String(100))
+    likes = Column(UnicodeText)
+    dislikes = Column(UnicodeText)
+    room_number = Column(String(7))
+    requests = Column(UnicodeText)
     level = Column(Integer)
     user = relationship('User', back_populates='details')
 
