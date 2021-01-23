@@ -7,8 +7,11 @@ from sqlalchemy import or_
 from telegram.ext import (Updater, CommandHandler, MessageHandler, Filters,
                           ConversationHandler)
 from telegram import (ReplyKeyboardMarkup, ReplyKeyboardRemove)
+from telegram.ext.dispatcher import run_async
 import os
 import logging
+import time
+import math
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -48,6 +51,7 @@ def db_session(method):
     return db_session_decorator
 
 
+@run_async
 @db_session
 def start(update, context, session):
     chat_id = update.message.chat_id
@@ -74,7 +78,7 @@ def start(update, context, session):
         if is_new_user:
             dragon = user_db.dragon
             if dragon and dragon.details and user_db.details:
-                update.message.reply_text(WELCOME_MESSAGE.format(**{
+                welcome_message = WELCOME_MESSAGE.format(**{
                     'name': user_db.details.name,
                     'dragon_name': dragon.details.name,
                     'dragon_room_number': dragon.details.room_number,
@@ -82,7 +86,12 @@ def start(update, context, session):
                     'dragon_dislikes': dragon.details.dislikes,
                     'dragon_requests': dragon.details.requests,
                     'dragon_level': dragon.details.level
-                }))
+                })
+                messages = list(filter(lambda x: len(x) > 0, welcome_message.splitlines()))
+                for message in messages:
+                    update.message.reply_text(message)
+                    time.sleep(math.ceil(len(message) / 25) + 1)
+
             else:
                 update.message.reply_text(USER_NO_DRAGON)
 
@@ -262,6 +271,7 @@ def send_dragon(update, context, session):
     return send_message_to_dragon(update, context, session)
 
 
+@run_async
 @db_session
 def send_admin(update, context, session):
     chat_id = update.message.chat_id
@@ -293,9 +303,11 @@ def handle_reply_message(current_mode):
 
         if new_mode is not None:
             if current_mode is None:
-                update.message.reply_text(USER_REPLY_SHORTCUT.format(TRAINER_KEY if new_mode == Role.TRAINER else DRAGON_KEY)),
+                update.message.reply_text(USER_REPLY_SHORTCUT.format(
+                    TRAINER_KEY if new_mode == Role.TRAINER else DRAGON_KEY)),
             elif current_mode != new_mode:
-                update.message.reply_text(USER_REPLY_CHANGE_MODE.format(TRAINER_KEY if new_mode == Role.TRAINER else DRAGON_KEY))
+                update.message.reply_text(USER_REPLY_CHANGE_MODE.format(
+                    TRAINER_KEY if new_mode == Role.TRAINER else DRAGON_KEY))
 
         return ret_value
     return inner_reply_message
@@ -311,11 +323,11 @@ def handle_delete_message(update, context, session):
     delete_message_reply(update.message, context.bot, session)
 
 
-@db_session
-def unknown_message(update, context, session):
+def unknown_message(update, context):
     update.message.reply_text(UNKNOWN_COMMAND)
 
 
+@run_async
 @db_session
 def handle_delete_admin(update, context, session):
     if len(context.args) == 2:

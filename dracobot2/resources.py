@@ -88,10 +88,12 @@ GAME_RULES_MESSAGE = "Rules of Dragons and Trainers " + DRAGON_EMOJI + "\n\n" +\
     "Love,\n" +\
     "Draco House Comm" + BLUE_HEART_EMOJI
 WELCOME_MESSAGE = "Dear {name},\n\n"\
-    "You woke up dizzy in the highest floors of a building known as AreSeaFore and you don't know how you were transported here. Next to you a piece of paper which reads:\n\n"\
-    "\"Trainer, you are tasked to train dragon ‘{dragon_name}’ for the next 3 weeks. Slowly approach the dragon at unit {dragon_room_number} to tame it and teach it new skills. Your dragon likes ‘{dragon_likes}’ but it really dislikes ‘{dragon_dislikes}‘. ‘{dragon_requests}' is stated as off limits. The difficulty of training is LEVEL {dragon_level:d}.\n\n"\
-    "To assist you in your journey and communicate with your dragons and your trainers, invoke the mystical help of @DragonTrainerBot\n\n"\
-    "I am your creator @dlau98, and I will watch over all of you trainers throughout the next 3 weeks. Do contact me should you need assistance in taming your dragon.\n\n"\
+    "You woke up dizzy in the highest floors of a building known as AreSeaFore and you are unsure of how you were transported here. Next to you lies a piece of paper which reads:\n\n"\
+    "\"Esteemed Trainer, you are tasked to train dragon ‘{dragon_name}’ for the next 2 and a half weeks. Slowly approach the dragon at unit {dragon_room_number} to tame it and teach it new skills.\n\n"\
+    "Your dragon likes ‘{dragon_likes}’ but it really dislikes ‘{dragon_dislikes}‘.\n\n"\
+    "‘{dragon_requests}' is stated as off limits. Take careful note of these as you venture on your quest to tame your dragon, for there may be consequences.\n\nThe difficulty of training is LEVEL {dragon_level:d}.\n\n"\
+    "To assist you in your journey, you may communicate with your dragons and your trainers through invoking the mystical help of @DragonTrainerBot\n\n"\
+    "We, @ameensgarlicnaan, @Izuki_LXY and @dlau98, will watch over all of you trainers throughout the training. Do contact us should you need assistance in taming your dragon.\n\n"\
     "Set forth young one and be the best dragon tamer of AreSeaFore Draco.\"\n\n"\
     "*Game of Thrones Music Intensifies*"
 STATUS = "Trainer Status: {trainer_status}\n"\
@@ -108,8 +110,8 @@ CONNECTION_SUCCESS = "You have been connected with your {}." +\
     " Anything you type here will be sent anonymously to him/her.\n" +\
     "To exit, type /" + DONE_KEY
 DELETE_MESSAGE_SUCCESS = "Message deleted."
-USER_REPLY_SHORTCUT = "This message has been sent. You are currently connected with your {}. Send /done when you are done."
-USER_REPLY_CHANGE_MODE = "You are currently connected with your {}. Send /done when you are done."
+USER_REPLY_SHORTCUT = "This message has been sent. You are currently connected with your {}. Send /" + DONE_KEY + " when you are done."
+USER_REPLY_CHANGE_MODE = "You are currently connected with your {}. Send /" + DONE_KEY + " when you are done."
 
 # Error Messages
 USER_UNREGISTERED = "You have not been registered. Press /start once you have registered."
