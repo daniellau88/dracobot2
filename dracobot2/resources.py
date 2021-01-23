@@ -87,14 +87,13 @@ GAME_RULES_MESSAGE = "Rules of Dragons and Trainers " + DRAGON_EMOJI + "\n\n" +\
     " organizing comm! We hope you have fun and make new friends as well!\n\n" +\
     "Love,\n" +\
     "Draco House Comm" + BLUE_HEART_EMOJI
-WELCOME_MESSAGE = "Dear {name},\n\n"\
-    "You woke up dizzy in the highest floors of a building known as AreSeaFore and you are unsure of how you were transported here. Next to you lies a piece of paper which reads:\n\n"\
+WELCOME_MESSAGE = "Dear {name},\n\n\n"\
+    "You woke up dizzy in the highest floors of a building known as AreSeaFore and you are unsure of how you were transported here. Next to you lies a piece of paper which reads:\n\n\n"\
     "\"Esteemed Trainer, you are tasked to train dragon ‘{dragon_name}’ for the next 2 and a half weeks. Slowly approach the dragon at unit {dragon_room_number} to tame it and teach it new skills.\n\n"\
     "Your dragon likes ‘{dragon_likes}’ but it really dislikes ‘{dragon_dislikes}‘.\n\n"\
-    "‘{dragon_requests}' is stated as off limits. Take careful note of these as you venture on your quest to tame your dragon, for there may be consequences.\n\nThe difficulty of training is LEVEL {dragon_level:d}.\n\n"\
-    "To assist you in your journey, you may communicate with your dragons and your trainers through invoking the mystical help of @DragonTrainerBot\n\n"\
-    "We, @ameensgarlicnaan, @Izuki_LXY and @dlau98, will watch over all of you trainers throughout the training. Do contact us should you need assistance in taming your dragon.\n\n"\
-    "Set forth young one and be the best dragon tamer of AreSeaFore Draco.\"\n\n"\
+    "‘{dragon_requests}' is stated as off limits. Take careful note of these as you venture on your quest to tame your dragon, for there may be consequences.\n\nThe difficulty of training is LEVEL {dragon_level:d}.\n\n\n"\
+    "We, @ameensgarlicnaan, @Izuki_LXY and @dlau98, will watch over all of you trainers throughout the training. Do contact us should you need assistance in taming your dragon.\n\n\n"\
+    "Set forth young one and be the best dragon tamer of AreSeaFore Draco.\"\n\n\n"\
     "*Game of Thrones Music Intensifies*"
 STATUS = "Trainer Status: {trainer_status}\n"\
     "Dragon Status: {dragon_status}\n"

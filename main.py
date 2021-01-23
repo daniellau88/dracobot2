@@ -87,10 +87,10 @@ def start(update, context, session):
                     'dragon_requests': dragon.details.requests,
                     'dragon_level': dragon.details.level
                 })
-                messages = list(filter(lambda x: len(x) > 0, welcome_message.splitlines()))
+                messages = list(filter(lambda x: len(x) > 0, welcome_message.split('\n\n\n')))
                 for message in messages:
                     update.message.reply_text(message)
-                    time.sleep(math.ceil(len(message) / 25) + 1)
+                    time.sleep(math.ceil(len(message) / 30) + 1)
 
             else:
                 update.message.reply_text(USER_NO_DRAGON)
