@@ -48,9 +48,9 @@ HELP_MESSAGE = "Hello there, {}!\n\n" +\
     DRAGON_CHAT_KEY + ": To chat with your Dragon \n" +\
     TRAINER_CHAT_KEY + ": To chat with your Trainer\n" +\
     HELP_KEY + ": To explore this bot's functionality\n" +\
-    STATUS_KEY + ": To view status of Dragon and Trainer\n\n" +\
-    ABOUT_THE_BOT_KEY + ": To view information about the bot\n" +\
+    STATUS_KEY + ": To view status of Dragon and Trainer\n" +\
     RULES_KEY + ": To view the game rules\n" +\
+    ABOUT_THE_BOT_KEY + ": To view information about the bot\n\n" +\
     "Type /" + DONE_KEY + " at any point in time to exit the Chat feature\n" +\
     "Type /" + MENU_KEY + " to show the Main Menu\n\n" +\
     "Please message @dlau98 if you need technical assistance!\n" +\
@@ -98,13 +98,13 @@ WELCOME_MESSAGE = "Dear {name},\n\n"\
     "*Game of Thrones Music Intensifies*"
 STATUS = "Trainer Status: {trainer_status}\n"\
     "Dragon Status: {dragon_status}\n"
-DRAGON_DETAILS = "Dragon Details " + DRAGON_EMOJI + "\n"\
+DRAGON_DETAILS = "Dragon Details " + DRAGON_EMOJI + "\n\n"\
     "Name: {name}\n"\
-    "Likes: {likes}\n"\
-    "Dislikes: {dislikes}\n"\
     "Unit: {room_number}\n"\
-    "Off Limits: {requests}\n"\
-    "Level: {level:d}\n"
+    "Level: {level:d}\n\n"\
+    "Likes:\n{likes}\n\n"\
+    "Dislikes:\n{dislikes}\n\n"\
+    "Off Limits:\n{requests}\n\n"
 CHAT_COMPLETE = "You have finish chatting with your {}."
 CONNECTION_SUCCESS = "You have been connected with your {}." +\
     " Anything you type here will be sent anonymously to him/her.\n" +\
@@ -118,7 +118,7 @@ USER_UNREGISTERED = "You have not been registered. Press /start once you have re
 USER_NO_TELE_HANDLE = "Please register with your telegram handle."
 USER_NO_TRAINER = "You have no trainer. Please ask the admin to assign a trainer to you."
 USER_UNREGISTERED_TRAINER = "Your trainer has not register. Please try again later."
-USER_NO_DRAGON = "You have no dragon. Please ask the admin to assign a trainer to you."
+USER_NO_DRAGON = "You have no dragon. Please ask the admin to assign a dragon to you."
 USER_UNREGISTERED_DRAGON = "Your dragon has not register. Please try again later."
 UNSUPPORTED_MEDIA = "Media not supported."
 CONNECTION_ERROR = "Connection error. Please be patient and try again soon!" + SMILEY_EMOJI
