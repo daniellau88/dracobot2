@@ -51,7 +51,6 @@ def db_session(method):
     return db_session_decorator
 
 
-@run_async
 @db_session
 def start(update, context, session):
     chat_id = update.message.chat_id
@@ -90,7 +89,7 @@ def start(update, context, session):
                 messages = list(filter(lambda x: len(x) > 0, welcome_message.split('\n\n\n')))
                 for message in messages:
                     update.message.reply_text(message)
-                    time.sleep(math.ceil(len(message) / 30) + 1)
+                    time.sleep(math.ceil(len(message) / 40) + 1)
 
             else:
                 update.message.reply_text(USER_NO_DRAGON)
@@ -271,7 +270,6 @@ def send_dragon(update, context, session):
     return send_message_to_dragon(update, context, session)
 
 
-@run_async
 @db_session
 def send_admin(update, context, session):
     chat_id = update.message.chat_id
@@ -332,7 +330,7 @@ def handle_unknown_message_chat(target):
         update.message.reply_text(UNKNOWN_CHAT_COMMAND.format(target))
     return unknown_message_chat
 
-@run_async
+
 @db_session
 def handle_delete_admin(update, context, session):
     if len(context.args) == 2:
@@ -362,6 +360,11 @@ def done_chat(target):
 
         return END
     return inner_done_chat
+
+
+def _error(update, context):
+    logger.error(context)
+    logger.error(context.error)
 
 
 def main():
@@ -426,10 +429,10 @@ def main():
             ADMIN_CHAT: [MessageHandler(Filters.update.edited_message,
                                         handle_edited_message),
                          CommandHandler(DONE_KEY, done_chat(ADMIN_KEY)),
-                         CommandHandler(DELETE_KEY, handle_delete_admin),
+                         CommandHandler(DELETE_KEY, handle_delete_admin, run_async=True),
                          MessageHandler(
                              Filters.command, handle_unknown_message_chat(ADMIN_KEY)),
-                         MessageHandler(SUPPORTED_MESSAGE_FILTERS, send_admin),
+                         MessageHandler(SUPPORTED_MESSAGE_FILTERS, send_admin, run_async=True),
                          MessageHandler(UNSUPPORTED_MESSAGE_FILTERS, unsupported_media)],
 
             TIMEOUT: [MessageHandler(
@@ -445,10 +448,10 @@ def main():
 
     conv_handler = ConversationHandler(
         entry_points=[MessageHandler(Filters.update.edited_message, handle_edited_message),
-                      MessageHandler(Filters.all, start), ],
+                      MessageHandler(Filters.all, start, run_async=True), ],
 
         states={
-            UNREGISTERED: [MessageHandler(Filters.all, start)],
+            UNREGISTERED: [MessageHandler(Filters.all, start, run_async=True)],
 
             MAIN: [MessageHandler(Filters.update.edited_message, handle_edited_message),
                    chat_handler,
@@ -464,6 +467,7 @@ def main():
         fallbacks=[MessageHandler(Filters.all, unknown_message)]
     )
 
+    dp.add_error_handler(_error, run_async=True)
     dp.add_handler(conv_handler)
 
     # Start the Bot
