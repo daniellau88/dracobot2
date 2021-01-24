@@ -11,6 +11,11 @@ BLUE_HEART_EMOJI = u"\U0001F499"
 GREEN_STATUS_EMOJI = u"\U0001F7E2"
 RED_STATUS_EMOJI = u"\U0001F534"
 CROSS_EMOJI = u"\U0000274C"
+GIFT_EMOJI = u"\U0001F381"
+DEVIL_EMOJI = u"\U0001F608"
+WINK_EMOJI = u"\U0001F609"
+SMILE_EMOJI = u"\U0001F601"
+SPARKLE_EMOJI = u"\U00002728"
 
 WHALE_EMOJI = u"\U0001F40B"
 SPOUTING_WHALE_EMOJI = u"\U0001F433"
@@ -55,19 +60,20 @@ HELP_MESSAGE = "Hello there, {}!\n\n" +\
     "Type /" + MENU_KEY + " to show the Main Menu\n\n" +\
     "Please message @dlau98 if you need technical assistance!\n" +\
     "Thank you and we hope you'll have fun throughout this game! :)"
-GAME_RULES_MESSAGE = "Rules of Dragons and Trainers " + DRAGON_EMOJI + "\n\n" +\
+GAME_RULES_MESSAGE = "Rules of Dragon and Trainer " + DRAGON_EMOJI + "\n\n" +\
     "Each of you who participated will be assigned a Trainer and a Dragon. " +\
     "Of course, you will know the identity of your Dragon while your Trainer’s identity will be kept " +\
     "from you. Throughout the course of the event, feel free to chat with both your Dragon and Trainer " +\
-    "through telegram bot where your identity will be kept secret, and take care of your dragon with " +\
-    "anonymous gift and pranks according to their indicated tolerance levels! " +\
-    "Of course, you can look forward to seeing what your own trainer does for you as well!\n\n" +\
+    "through this telegram bot where your identity will be kept secret, and take care of your dragon with " +\
+    "anonymous gifts " + GIFT_EMOJI + " and pranks " + DEVIL_EMOJI + " according to their indicated tolerance levels! " +\
+    "Of course, you can look forward to seeing what your own trainer does for you as well! " + WINK_EMOJI + SMILE_EMOJI + SPARKLE_EMOJI + "\n\n" +\
     "Explanation for tolerance levels\n\n" +\
     "1: Gift Exchange, do nice things only!\n" +\
-    "2: Pranks are to be minimal, and no clean up required!\n" +\
+    "2: Pranks are to be minimal, and no / minimal clean up required!\n" +\
     "3: Pranks are fine, but do take care of what your dragon says is OFF LIMITS\n\n" +\
     "Dos :)\n" +\
     "• Observe the Tolerance Levels your dragons have indicated.\n" +\
+    "• Gain consent from your dragon before entering their rooms.\n" +\
     "• Try to accommodate (if any) requests of your dragons e.g. avoid allergies\n" +\
     "• Balance out the pranks with gifts - moderation is key!\n" +\
     "• Try (your best) to keep your identity hidden.\n" +\
@@ -80,9 +86,9 @@ GAME_RULES_MESSAGE = "Rules of Dragons and Trainers " + DRAGON_EMOJI + "\n\n" +\
     "(e.g. blockade the walkway, pranks involving powdered substances like flour or curry powder).\n" +\
     "• Cause fire hazards and hinder evacuation routes.\n" +\
     "• Write, draw or scribble any obscene/vulgar contents on doors/common area.\n\n" +\
-    "**IMPORTANT!**\n\n" +\
+    "**IMPORTANT!**\n\n\n" +\
     "NO LIVE ANIMALS OR INSECTS\n" +\
-    "NO MOVING OF FURNITURE OUT OF THE ROOMS\n\n" +\
+    "NO MOVING OF FURNITURE OUT OF THE ROOMS\n\n\n" +\
     "If you have any other questions, concerns or doubts, don’t be afraid to reach out to the" +\
     " organizing comm! We hope you have fun and make new friends as well!\n\n" +\
     "Love,\n" +\
