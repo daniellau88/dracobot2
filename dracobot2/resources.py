@@ -14,8 +14,14 @@ CROSS_EMOJI = u"\U0000274C"
 GIFT_EMOJI = u"\U0001F381"
 DEVIL_EMOJI = u"\U0001F608"
 WINK_EMOJI = u"\U0001F609"
-SMILE_EMOJI = u"\U0001F601"
+GRIN_EMOJI = u"\U0001F601"
+SMILE_EMOJI = u"\U0001F642"
+SAD_EMOJI = u"\U00002639"
 SPARKLE_EMOJI = u"\U00002728"
+SWORD_EMOJI = u"\U0001F5E1"
+KNIFE_EMOJI = u"\U0001F52A"
+FIRE_EMOJI = u"\U0001F525"
+
 
 WHALE_EMOJI = u"\U0001F40B"
 SPOUTING_WHALE_EMOJI = u"\U0001F433"
@@ -48,16 +54,20 @@ ADMIN_GREETING = "Hello there, Administrator! What do you want to say to everyon
 HELLO_GREETING = "Hello there, {}! DracoBot at your service! Press /" + \
     MENU_KEY + " to bring up keyboard! " + DRAGON_EMOJI
 HELP_MESSAGE = "Hello there, {}!\n\n" +\
-    "Dragon Trainer Bot is a homegrown telegram bot that allows you to anonymously chat with your Dragon or Trainer.\n\n" +\
-    "While in the Main Menu, click on:\n" +\
+    "<u>Main Menu</u>\n" +\
     DRAGON_CHAT_KEY + ": To chat with your Dragon \n" +\
     TRAINER_CHAT_KEY + ": To chat with your Trainer\n" +\
     HELP_KEY + ": To explore this bot's functionality\n" +\
     STATUS_KEY + ": To view status of Dragon and Trainer\n" +\
     RULES_KEY + ": To view the game rules\n" +\
     ABOUT_THE_BOT_KEY + ": To view information about the bot\n\n" +\
-    "Type /" + DONE_KEY + " at any point in time to exit the Chat feature\n" +\
+    "Type /" + DONE_KEY + " at any point in time to exit the chat\n" +\
     "Type /" + MENU_KEY + " to show the Main Menu\n\n" +\
+    "<u>Features</u>\n" +\
+    "1. <b>Reply message</b>: You can reply to a message to automatically chat with your dragon / trainer.\n" +\
+    "2. <b>Delete message</b>: You can select a message and type /delete\n" +\
+    "3. <b>Edit message</b>: You can edit your message to your dragon / trainer\n" +\
+    "4. <b>Media files</b>: Supported files are <i>audio</i>, <i>document</i>, <i><b>photo</b></i>, <i><b>sticker</b></i>, <i>videos</i>, <i>video note</i> and <i>voice</i>\n\n" +\
     "Please message @dlau98 if you need technical assistance!\n" +\
     "Thank you and we hope you'll have fun throughout this game! :)"
 GAME_RULES_MESSAGE = "Rules of Dragon and Trainer " + DRAGON_EMOJI + "\n\n" +\
@@ -66,31 +76,33 @@ GAME_RULES_MESSAGE = "Rules of Dragon and Trainer " + DRAGON_EMOJI + "\n\n" +\
     "from you. Throughout the course of the event, feel free to chat with both your Dragon and Trainer " +\
     "through this telegram bot where your identity will be kept secret, and take care of your dragon with " +\
     "anonymous gifts " + GIFT_EMOJI + " and pranks " + DEVIL_EMOJI + " according to their indicated tolerance levels! " +\
-    "Of course, you can look forward to seeing what your own trainer does for you as well! " + WINK_EMOJI + SMILE_EMOJI + SPARKLE_EMOJI + "\n\n" +\
-    "Explanation for tolerance levels\n\n" +\
+    "Of course, you can look forward to seeing what your own trainer does for you as well! " + WINK_EMOJI + GRIN_EMOJI + SPARKLE_EMOJI + "\n\n" +\
+    "<u>Explanation for tolerance levels</u>\n\n" +\
     "1: Gift Exchange, do nice things only!\n" +\
     "2: Pranks are to be minimal, and no / minimal clean up required!\n" +\
-    "3: Pranks are fine, but do take care of what your dragon says is OFF LIMITS\n\n" +\
-    "Dos :)\n" +\
+    "3: Pranks are fine, but do take care of what your dragon says is <b>OFF LIMITS</b>\n\n" +\
+    "<u>Dos</u> " + SMILE_EMOJI + "\n" +\
     "• Observe the Tolerance Levels your dragons have indicated.\n" +\
-    "• Gain consent from your dragon before entering their rooms.\n" +\
-    "• Try to accommodate (if any) requests of your dragons e.g. avoid allergies\n" +\
-    "• Balance out the pranks with gifts - moderation is key!\n" +\
-    "• Try (your best) to keep your identity hidden.\n" +\
+    "• Gain consent from your dragon before entering their rooms. (You can ask using the @DragonTrainerBot via the chat function)\n" +\
+    "• Do take note of your dragon’s dislikes and OFF LIMITS details and adhere to them (Try to <b>avoid</b> doing anything your dragon dislikes, especially anything they have declared OFF LIMITS)\n" +\
+    "• <b>Balance out the pranks with gifts - moderation is key!</b>\n" +\
+    "• Try (your best) to <b>keep your identity hidden</b>.\n" +\
     "• Be active in the event! :)\n" +\
-    "• Share your pranks and gifts throughout the event in the Draco group chat!\n\n" +\
-    "Don'ts :(\n" +\
-    "• Cause major damage (eg. breaking a treasured object) even if they’ve indicated no boundaries.\n" +\
-    "• Flout other RC/NUS rules (e.g. theft, possession of alcohol *ahem ahem*).\n" +\
+    "• " + SPARKLE_EMOJI + "<b>Share your pranks and gifts throughout the event in the Draco group chat!</b>" + SPARKLE_EMOJI + "\n\n" +\
+    "<u>Don'ts</u> " + SAD_EMOJI + CROSS_EMOJI + "\n" +\
+    "• Cause major damage (e.g. breaking a treasured object) even if they’ve indicated no boundaries.\n" +\
+    "• Flout other RC / NUS rules (e.g. theft, possession of alcohol *ahem ahem*).\n" +\
     "• Cause major inconveniences, especially along the common corridor" +\
     "(e.g. blockade the walkway, pranks involving powdered substances like flour or curry powder).\n" +\
     "• Cause fire hazards and hinder evacuation routes.\n" +\
-    "• Write, draw or scribble any obscene/vulgar contents on doors/common area.\n\n" +\
-    "**IMPORTANT!**\n\n\n" +\
+    "• Write, draw or scribble any obscene/vulgar contents on doors / common area.\n" +\
+    "• Commit pranks that may put <b>YOURSELF</b> or <b>OTHERS AT RISK</b> " + SWORD_EMOJI + KNIFE_EMOJI + FIRE_EMOJI + " (e.g. placing personal objects at dangerous locations, using flammables)\n\n" +\
+    "<b>**IMPORTANT!**</b>\n\n" +\
     "NO LIVE ANIMALS OR INSECTS\n" +\
-    "NO MOVING OF FURNITURE OUT OF THE ROOMS\n\n\n" +\
-    "If you have any other questions, concerns or doubts, don’t be afraid to reach out to the" +\
-    " organizing comm! We hope you have fun and make new friends as well!\n\n" +\
+    "NO MOVING OF FURNITURE OUT OF THE ROOMS and AVOID MOVING of furniture\n" +\
+    "And RESTRICT pranks to <b>YOUR OWN DRAGON</b> (avoid performing pranks on others’ dragons as any incidents that arise due to your unannounced pranks would implicate other trainers)\n\n" +\
+    "Do adhere to the rules as stated above, as well as the basic housing regulations of RC4.\n\n" +\
+    "If you have any other questions, concerns or doubts, don’t be afraid to reach out to @ameensgarlicnaan, @Izuki_LXY and @dlau98! We hope you have fun and make new friends as well!\n\n" +\
     "Love,\n" +\
     "Draco House Comm" + BLUE_HEART_EMOJI
 WELCOME_MESSAGE = "Dear {name},\n\n\n"\

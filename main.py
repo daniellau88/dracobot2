@@ -128,13 +128,13 @@ def helps(update, context, session):
         first_name = user_db.details.name
 
     update.message.reply_text(HELP_MESSAGE.format(
-        first_name), **DEFAULT_REPLY_MARKUP)
+        first_name), parse_mode=telegram.ParseMode.HTML, **DEFAULT_REPLY_MARKUP)
 
     return MAIN
 
 
 def rules(update, context):
-    update.message.reply_text(GAME_RULES_MESSAGE, **DEFAULT_REPLY_MARKUP)
+    update.message.reply_text(GAME_RULES_MESSAGE, parse_mode=telegram.ParseMode.HTML, **DEFAULT_REPLY_MARKUP)
 
     return MAIN
 
