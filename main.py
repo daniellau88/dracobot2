@@ -33,6 +33,7 @@ DEFAULT_REPLY_MARKUP = {'reply_markup': ReplyKeyboardMarkup(
     KEYBOARD_OPTIONS, one_time_keyboard=True)}
 REMOVE_REPLY_MARKUP = {'reply_markup': ReplyKeyboardRemove()}
 
+COMMAND_FILTER_REGEX = Filters.regex(ABOUT_THE_BOT_KEY) | Filters.regex(DRAGON_CHAT_KEY) | Filters.regex(TRAINER_CHAT_KEY) | Filters.regex(STATUS_KEY) | Filters.regex(HELP_KEY) | Filters.regex(RULES_KEY)
 
 END = ConversationHandler.END
 TIMEOUT = ConversationHandler.TIMEOUT
@@ -221,7 +222,7 @@ def check_admin(update, context, session):
     user_db = session.query(User).filter(User.chat_id == chat_id).first()
 
     if user_db and user_db.is_admin:
-        update.message.reply_text(ADMIN_GREETING)
+        update.message.reply_text(ADMIN_GREETING, **REMOVE_REPLY_MARKUP)
         return ADMIN_CHAT
 
     update.message.reply_text(UNKNOWN_COMMAND)
@@ -302,10 +303,10 @@ def handle_reply_message(current_mode):
         if new_mode is not None:
             if current_mode is None:
                 update.message.reply_text(USER_REPLY_SHORTCUT.format(
-                    TRAINER_KEY if new_mode == Role.TRAINER else DRAGON_KEY)),
+                    TRAINER_KEY if new_mode == Role.TRAINER else DRAGON_KEY), **REMOVE_REPLY_MARKUP),
             elif current_mode != new_mode:
                 update.message.reply_text(USER_REPLY_CHANGE_MODE.format(
-                    TRAINER_KEY if new_mode == Role.TRAINER else DRAGON_KEY))
+                    TRAINER_KEY if new_mode == Role.TRAINER else DRAGON_KEY), **REMOVE_REPLY_MARKUP)
 
         return ret_value
     return inner_reply_message
@@ -344,7 +345,7 @@ def handle_delete_admin(update, context, session):
 
 def unsupported_media(update, context):
     update.message.reply_text(
-        UNSUPPORTED_MEDIA, reply_to_message_id=update.message.message_id, reply_markup=ReplyKeyboardRemove())
+        UNSUPPORTED_MEDIA, reply_to_message_id=update.message.message_id, **REMOVE_REPLY_MARKUP)
 
 
 def handle_timeout_chat(update, context):
@@ -391,7 +392,7 @@ def main():
                           CommandHandler(DONE_KEY, done_chat(DRAGON_KEY)),
                           CommandHandler(DELETE_KEY, handle_delete_message),
                           MessageHandler(
-                              Filters.command, handle_unknown_message_chat(DRAGON_KEY)),
+                              Filters.command | COMMAND_FILTER_REGEX, handle_unknown_message_chat(DRAGON_KEY)),
                           MessageHandler(
                               Filters.reply, handle_reply_message(Role.DRAGON)),
                           MessageHandler(
@@ -404,7 +405,7 @@ def main():
                            CommandHandler(DONE_KEY, done_chat(TRAINER_KEY)),
                            CommandHandler(DELETE_KEY, handle_delete_message),
                            MessageHandler(
-                               Filters.command, handle_unknown_message_chat(TRAINER_KEY)),
+                               Filters.command | COMMAND_FILTER_REGEX, handle_unknown_message_chat(TRAINER_KEY)),
                            MessageHandler(
                                Filters.reply, handle_reply_message(Role.TRAINER)),
                            MessageHandler(
@@ -431,7 +432,7 @@ def main():
                          CommandHandler(DONE_KEY, done_chat(ADMIN_KEY)),
                          CommandHandler(DELETE_KEY, handle_delete_admin, run_async=True),
                          MessageHandler(
-                             Filters.command, handle_unknown_message_chat(ADMIN_KEY)),
+                             Filters.command | COMMAND_FILTER_REGEX, handle_unknown_message_chat(ADMIN_KEY)),
                          MessageHandler(SUPPORTED_MESSAGE_FILTERS, send_admin, run_async=True),
                          MessageHandler(UNSUPPORTED_MESSAGE_FILTERS, unsupported_media)],
 
