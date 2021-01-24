@@ -1,9 +1,9 @@
-from dracobot2.models import MsgFrom
+from dracobot2.models import Role
 from dracobot2.resources import *
 
 
-def format_message(message_text, message_from=MsgFrom.DRAGON, is_prefix=False, is_edited=False):
-    receiver_type = 'Dragon' if message_from == MsgFrom.DRAGON else 'Trainer' if message_from == MsgFrom.TRAINER else 'Admin'
+def format_message(message_text, message_from=Role.DRAGON, is_prefix=False, is_edited=False):
+    receiver_type = 'Dragon' if message_from == Role.DRAGON else 'Trainer' if message_from == Role.TRAINER else 'Admin'
 
     if is_edited:
         message_text += ' (edited)'

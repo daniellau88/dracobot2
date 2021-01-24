@@ -1,13 +1,13 @@
 import enum
 from sqlalchemy.types import Enum
 from sqlalchemy.orm import relationship, backref
-from sqlalchemy import Column, Integer, String, ForeignKey, Text, Boolean
+from sqlalchemy import Column, Integer, String, ForeignKey, UnicodeText, Boolean
 from sqlalchemy.ext.declarative import declarative_base
 
 Base = declarative_base()
 
 
-class MsgFrom(enum.Enum):
+class Role(enum.Enum):
     DRAGON = 1
     TRAINER = 2
     ADMIN = 3
@@ -37,10 +37,10 @@ class UserDetails(Base):
     user_id = Column(Integer, ForeignKey(User.id),
                      primary_key=True, nullable=False)
     name = Column(String(100))
-    likes = Column(Text)
-    dislikes = Column(Text)
-    room_number = Column(String(6))
-    requests = Column(String(100))
+    likes = Column(UnicodeText)
+    dislikes = Column(UnicodeText)
+    room_number = Column(String(7))
+    requests = Column(UnicodeText)
     level = Column(Integer)
     user = relationship('User', back_populates='details')
 
@@ -57,4 +57,4 @@ class MessageMapping(Base):
     receiver_caption_message_id = Column(Integer, nullable=True)
     deleted = Column(Boolean, nullable=False,
                      default=False, server_default="0")
-    message_from = Column(Enum(MsgFrom), nullable=False)
+    message_from = Column(Enum(Role), nullable=False)

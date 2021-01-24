@@ -48,9 +48,9 @@ HELP_MESSAGE = "Hello there, {}!\n\n" +\
     DRAGON_CHAT_KEY + ": To chat with your Dragon \n" +\
     TRAINER_CHAT_KEY + ": To chat with your Trainer\n" +\
     HELP_KEY + ": To explore this bot's functionality\n" +\
-    STATUS_KEY + ": To view status of Dragon and Trainer\n\n" +\
-    ABOUT_THE_BOT_KEY + ": To view information about the bot\n" +\
+    STATUS_KEY + ": To view status of Dragon and Trainer\n" +\
     RULES_KEY + ": To view the game rules\n" +\
+    ABOUT_THE_BOT_KEY + ": To view information about the bot\n\n" +\
     "Type /" + DONE_KEY + " at any point in time to exit the Chat feature\n" +\
     "Type /" + MENU_KEY + " to show the Main Menu\n\n" +\
     "Please message @dlau98 if you need technical assistance!\n" +\
@@ -87,34 +87,37 @@ GAME_RULES_MESSAGE = "Rules of Dragons and Trainers " + DRAGON_EMOJI + "\n\n" +\
     " organizing comm! We hope you have fun and make new friends as well!\n\n" +\
     "Love,\n" +\
     "Draco House Comm" + BLUE_HEART_EMOJI
-WELCOME_MESSAGE = "Dear {name},\n\n"\
-    "You woke up dizzy in the highest floors of a building known as AreSeaFore and you don't know how you were transported here. Next to you a piece of paper which reads:\n\n"\
-    "\"Trainer, you are tasked to train dragon ‘{dragon_name}’ for the next 3 weeks. Slowly approach the dragon at unit {dragon_room_number} to tame it and teach it new skills. Your dragon likes ‘{dragon_likes}’ but it really dislikes ‘{dragon_dislikes}‘. ‘{dragon_requests}' is stated as off limits. The difficulty of training is LEVEL {dragon_level:d}.\n\n"\
-    "To assist you in your journey and communicate with your dragons and your trainers, invoke the mystical help of @DragonTrainerBot\n\n"\
-    "I am your creator @dlau98, and I will watch over all of you trainers throughout the next 3 weeks. Do contact me should you need assistance in taming your dragon.\n\n"\
-    "Set forth young one and be the best dragon tamer of AreSeaFore Draco.\"\n\n"\
+WELCOME_MESSAGE = "Dear {name},\n\n\n"\
+    "You woke up dizzy in the highest floors of a building known as AreSeaFore and you are unsure of how you were transported here. Next to you lies a piece of paper which reads:\n\n\n"\
+    "\"Esteemed Trainer, you are tasked to train dragon ‘{dragon_name}’ for the next 2 and a half weeks. Slowly approach the dragon at unit {dragon_room_number} to tame it and teach it new skills.\n\n"\
+    "Your dragon likes ‘{dragon_likes}’ but it really dislikes ‘{dragon_dislikes}‘.\n\n"\
+    "‘{dragon_requests}' is stated as off limits. Take careful note of these as you venture on your quest to tame your dragon, for there may be consequences.\n\nThe difficulty of training is LEVEL {dragon_level:d}.\n\n\n"\
+    "We, @ameensgarlicnaan, @Izuki_LXY and @dlau98, will watch over all of you trainers throughout the training. Do contact us should you need assistance in taming your dragon.\n\n\n"\
+    "Set forth young one and be the best dragon tamer of AreSeaFore Draco.\"\n\n\n"\
     "*Game of Thrones Music Intensifies*"
 STATUS = "Trainer Status: {trainer_status}\n"\
     "Dragon Status: {dragon_status}\n"
-DRAGON_DETAILS = "Dragon Details " + DRAGON_EMOJI + "\n"\
+DRAGON_DETAILS = "Dragon Details " + DRAGON_EMOJI + "\n\n"\
     "Name: {name}\n"\
-    "Likes: {likes}\n"\
-    "Dislikes: {dislikes}\n"\
     "Unit: {room_number}\n"\
-    "Off Limits: {requests}\n"\
-    "Level: {level:d}\n"
+    "Level: {level:d}\n\n"\
+    "Likes:\n{likes}\n\n"\
+    "Dislikes:\n{dislikes}\n\n"\
+    "Off Limits:\n{requests}\n\n"
 CHAT_COMPLETE = "You have finish chatting with your {}."
 CONNECTION_SUCCESS = "You have been connected with your {}." +\
     " Anything you type here will be sent anonymously to him/her.\n" +\
     "To exit, type /" + DONE_KEY
 DELETE_MESSAGE_SUCCESS = "Message deleted."
+USER_REPLY_SHORTCUT = "This message has been sent. You are currently connected with your {}. Send /" + DONE_KEY + " when you are done."
+USER_REPLY_CHANGE_MODE = "You are currently connected with your {}. Send /" + DONE_KEY + " when you are done."
 
 # Error Messages
 USER_UNREGISTERED = "You have not been registered. Press /start once you have registered."
 USER_NO_TELE_HANDLE = "Please register with your telegram handle."
 USER_NO_TRAINER = "You have no trainer. Please ask the admin to assign a trainer to you."
 USER_UNREGISTERED_TRAINER = "Your trainer has not register. Please try again later."
-USER_NO_DRAGON = "You have no dragon. Please ask the admin to assign a trainer to you."
+USER_NO_DRAGON = "You have no dragon. Please ask the admin to assign a dragon to you."
 USER_UNREGISTERED_DRAGON = "Your dragon has not register. Please try again later."
 UNSUPPORTED_MEDIA = "Media not supported."
 CONNECTION_ERROR = "Connection error. Please be patient and try again soon!" + SMILEY_EMOJI
@@ -123,4 +126,6 @@ DELETE_MESSAGE_ERROR = "Message has been deleted."
 DELETE_MESSAGE_REPLY_ERROR = "Please reply a message to delete."
 UNKNOWN_COMMAND = "Unknown command. Press /" + \
     MENU_KEY + " to bring up keyboard."
-TIMEOUT_MESSAGE = "You are inactive for more than 10 minutes. You have been disconnected from your {} chat."
+UNKNOWN_CHAT_COMMAND = "You are still chatting with your {}. Press /" + \
+    DONE_KEY + " if you are done chatting."
+TIMEOUT_MESSAGE = "You have been inactive for more than 10 minutes. You will be disconnected from the chat."

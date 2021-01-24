@@ -2,7 +2,7 @@ import telegram
 from telegram import InputMediaPhoto, InputMediaAudio, InputMediaDocument, InputMediaVideo
 from telegram.ext import Filters
 from sqlalchemy import or_, and_
-from dracobot2.models import MessageMapping, MsgFrom
+from dracobot2.models import MessageMapping, Role
 from dracobot2.resources import *
 from .resources import *
 
@@ -15,7 +15,32 @@ def get_highest_resolution(photos):
     return max(photos, key=lambda x: x.file_size)
 
 
-def forward_message(message, chat_id, bot, session, message_from=MsgFrom.DRAGON):
+def check_reply_mapping(message, session):
+    cur_reply_to_message_id = message.reply_to_message.message_id
+    cur_reply_to_chat_id = message.reply_to_message.chat_id
+
+    reply_message = session.query(MessageMapping).filter(or_(and_(MessageMapping.sender_message_id == cur_reply_to_message_id, MessageMapping.sender_chat_id == cur_reply_to_chat_id), and_(
+        MessageMapping.receiver_message_id == cur_reply_to_message_id, MessageMapping.receiver_chat_id == cur_reply_to_chat_id))).first()
+    current_mode = None
+
+    if reply_message is not None:
+        if reply_message.sender_message_id == cur_reply_to_message_id:
+            if reply_message.message_from == Role.DRAGON:
+                current_mode = Role.TRAINER
+            elif reply_message.message_from == Role.TRAINER:
+                current_mode = Role.DRAGON
+            reply_to_message_id = reply_message.receiver_message_id
+        else:
+            if reply_message.message_from == Role.DRAGON:
+                current_mode = Role.DRAGON
+            elif reply_message.message_from == Role.TRAINER:
+                current_mode = Role.TRAINER
+            reply_to_message_id = reply_message.sender_message_id
+
+    return current_mode
+
+
+def forward_message(message, chat_id, bot, session, message_from=Role.DRAGON):
     is_forward = message.forward_from is not None or message.forward_from_message_id is not None
     is_photo = len(message.photo) > 0
     is_document = message.document is not None
@@ -86,69 +111,63 @@ def forward_message(message, chat_id, bot, session, message_from=MsgFrom.DRAGON)
 # Must be used together with db_session
 
 
-def handle_edited_message(func):
-    def handle_edited_message_decorator(update, context, session):
-        if update.edited_message is not None:
-            edited_message = update.edited_message
-            message_id = edited_message.message_id
-            chat_id = edited_message.chat_id
-            edited_messages_db = session.query(MessageMapping).filter(and_(
-                MessageMapping.sender_message_id == message_id, MessageMapping.sender_chat_id == chat_id, MessageMapping.deleted == False)).all()
+def edit_message(update, context, session):
+    edited_message = update.edited_message
+    message_id = edited_message.message_id
+    chat_id = edited_message.chat_id
+    edited_messages_db = session.query(MessageMapping).filter(and_(
+        MessageMapping.sender_message_id == message_id, MessageMapping.sender_chat_id == chat_id, MessageMapping.deleted == False)).all()
 
-            is_photo = len(edited_message.photo) > 0
-            is_document = edited_message.document is not None
-            is_video = edited_message.video is not None
-            is_audio = edited_message.audio is not None
+    is_photo = len(edited_message.photo) > 0
+    is_document = edited_message.document is not None
+    is_video = edited_message.video is not None
+    is_audio = edited_message.audio is not None
 
-            if edited_messages_db and len(edited_messages_db) > 0:
-                if is_photo or is_document or is_video or is_audio:
-                    if is_photo:
-                        edited_media = InputMediaPhoto(
-                            media=get_highest_resolution(edited_message.photo))
-                    elif is_document:
-                        edited_media = InputMediaDocument(
-                            media=edited_message.document)
-                    elif is_video:
-                        edited_media = InputMediaVideo(
-                            media=edited_message.video)
-                    elif is_audio:
-                        edited_media = InputMediaAudio(
-                            media=edited_message.audio)
+    if edited_messages_db and len(edited_messages_db) > 0:
+        if is_photo or is_document or is_video or is_audio:
+            if is_photo:
+                edited_media = InputMediaPhoto(
+                    media=get_highest_resolution(edited_message.photo))
+            elif is_document:
+                edited_media = InputMediaDocument(
+                    media=edited_message.document)
+            elif is_video:
+                edited_media = InputMediaVideo(
+                    media=edited_message.video)
+            elif is_audio:
+                edited_media = InputMediaAudio(
+                    media=edited_message.audio)
 
-                    for edited_message_db in edited_messages_db:
-                        try:
-                            context.bot.edit_message_media(
-                                media=edited_media, chat_id=edited_message_db.receiver_chat_id, message_id=edited_message_db.receiver_message_id)
-                        except telegram.error.BadRequest as e:
-                            print(e)
-                            pass
+            for edited_message_db in edited_messages_db:
+                try:
+                    context.bot.edit_message_media(
+                        media=edited_media, chat_id=edited_message_db.receiver_chat_id, message_id=edited_message_db.receiver_message_id)
+                except telegram.error.BadRequest as e:
+                    print(e)
+                    pass
 
-                if edited_message.text:
-                    for edited_message_db in edited_messages_db:
-                        formatted_text = format_message(
-                            edited_message.text, message_from=edited_message_db.message_from, is_prefix=True, is_edited=True)
+        if edited_message.text:
+            for edited_message_db in edited_messages_db:
+                formatted_text = format_message(
+                    edited_message.text, message_from=edited_message_db.message_from, is_prefix=True, is_edited=True)
 
-                        try:
-                            context.bot.edit_message_text(
-                                formatted_text, chat_id=edited_message_db.receiver_chat_id, message_id=edited_message_db.receiver_message_id)
-                        except telegram.error.BadRequest as e:
-                            print(e)
-                            pass
-                elif edited_message.caption:
-                    for edited_message_db in edited_messages_db:
-                        formatted_caption = format_message(
-                            edited_message.caption, message_from=edited_message_db.message_from, is_prefix=False, is_edited=True)
+                try:
+                    context.bot.edit_message_text(
+                        formatted_text, chat_id=edited_message_db.receiver_chat_id, message_id=edited_message_db.receiver_message_id)
+                except telegram.error.BadRequest as e:
+                    print(e)
+                    pass
+        elif edited_message.caption:
+            for edited_message_db in edited_messages_db:
+                formatted_caption = format_message(
+                    edited_message.caption, message_from=edited_message_db.message_from, is_prefix=False, is_edited=True)
 
-                        try:
-                            context.bot.edit_message_caption(
-                                caption=formatted_caption, chat_id=edited_message_db.receiver_chat_id, message_id=edited_message_db.receiver_message_id)
-                        except telegram.error.BadRequest as e:
-                            print(e)
-                            pass
-            return
-        else:
-            return func(update, context, session)
-    return handle_edited_message_decorator
+                try:
+                    context.bot.edit_message_caption(
+                        caption=formatted_caption, chat_id=edited_message_db.receiver_chat_id, message_id=edited_message_db.receiver_message_id)
+                except telegram.error.BadRequest as e:
+                    print(e)
+                    pass
 
 
 def delete_message(message, message_id, chat_id, reply_to_message_id, bot, session):
