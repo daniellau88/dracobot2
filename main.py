@@ -5,7 +5,7 @@ from dracobot2.config import SessionLocal
 from sqlalchemy.orm import scoped_session
 from sqlalchemy import or_
 from telegram.ext import (Updater, CommandHandler, MessageHandler, Filters,
-                          ConversationHandler)
+                          ConversationHandler, PicklePersistence)
 from telegram import (ReplyKeyboardMarkup, ReplyKeyboardRemove)
 from telegram.ext.dispatcher import run_async
 import os
@@ -372,7 +372,8 @@ def main():
     # Create the Updater and pass it your bot's token.
     # Make sure to set use_context=True to use the new context based callbacks
     # Post version 12 this will no longer be necessary
-    updater = Updater(TOKEN, use_context=True)
+    pp = PicklePersistence(filename='conversationbot')
+    updater = Updater(TOKEN, persistence=pp, use_context=True)
 
     # Get the dispatcher to register handlers
     dp = updater.dispatcher
@@ -420,7 +421,10 @@ def main():
         conversation_timeout=CHAT_TIMEOUT_SECONDS,
         map_to_parent={
             END: MAIN,
-        }
+        },
+
+        name="dt_conversation",
+        persistent=True,
     )
 
     admin_handler = ConversationHandler(
@@ -444,7 +448,10 @@ def main():
         conversation_timeout=CHAT_TIMEOUT_SECONDS,
         map_to_parent={
             END: MAIN,
-        }
+        },
+
+        name="admin_conversation",
+        persistent=True,
     )
 
     conv_handler = ConversationHandler(
@@ -465,7 +472,10 @@ def main():
                    MessageHandler(Filters.regex(STATUS_KEY), status)],
         },
 
-        fallbacks=[MessageHandler(Filters.all, unknown_message)]
+        fallbacks=[MessageHandler(Filters.all, unknown_message)],
+
+        name="main_conversation",
+        persistent=True,
     )
 
     dp.add_error_handler(_error, run_async=True)
