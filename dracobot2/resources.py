@@ -122,6 +122,9 @@ DRAGON_DETAILS = "Dragon Details " + DRAGON_EMOJI + "\n\n"\
     "Likes:\n{likes}\n\n"\
     "Dislikes:\n{dislikes}\n\n"\
     "Off Limits:\n{requests}\n\n"
+TRAINER_DETAILS = "Trainer Details " + TRAINER_EMOJI + SPARKLE_EMOJI + "\n\n"\
+    "Name: {name}\n"\
+    "Unit: {room_number}\n"
 CHAT_COMPLETE = "You have finish chatting with your {}."
 CONNECTION_SUCCESS = "You have been connected with your {}." +\
     " Anything you type here will be sent anonymously to him/her.\n" +\

@@ -158,6 +158,13 @@ def status(update, context, session):
             'level': dragon.details.level
         }
 
+    trainer_details = None
+    if trainer and trainer.details:
+        trainer_details = {
+            'name': trainer.details.name,
+            'room_number': trainer.details.room_number,
+        }
+
     t_registered = format_registered_message(trainer)
     d_registered = format_registered_message(dragon)
 
@@ -165,6 +172,9 @@ def status(update, context, session):
         'trainer_status': t_registered,
         'dragon_status': d_registered
     })
+
+    if trainer_details is not None:
+        message += '\n' + TRAINER_DETAILS.format(**trainer_details)
 
     if dragon_details is not None:
         message += '\n' + DRAGON_DETAILS.format(**dragon_details)
