@@ -33,7 +33,10 @@ DEFAULT_REPLY_MARKUP = {'reply_markup': ReplyKeyboardMarkup(
     KEYBOARD_OPTIONS, one_time_keyboard=True)}
 REMOVE_REPLY_MARKUP = {'reply_markup': ReplyKeyboardRemove()}
 
-COMMAND_FILTER_REGEX = Filters.regex(ABOUT_THE_BOT_KEY) | Filters.regex(DRAGON_CHAT_KEY) | Filters.regex(TRAINER_CHAT_KEY) | Filters.regex(STATUS_KEY) | Filters.regex(HELP_KEY) | Filters.regex(RULES_KEY)
+def get_filter_complete_match(match_string):
+    return Filters.regex('^' + match_string + '$')
+
+COMMAND_FILTER_REGEX = get_filter_complete_match(ABOUT_THE_BOT_KEY) | get_filter_complete_match(DRAGON_CHAT_KEY) | get_filter_complete_match(TRAINER_CHAT_KEY) | get_filter_complete_match(STATUS_KEY) | get_filter_complete_match(HELP_KEY) | get_filter_complete_match(RULES_KEY)
 
 END = ConversationHandler.END
 TIMEOUT = ConversationHandler.TIMEOUT
@@ -389,9 +392,9 @@ def main():
     dp = updater.dispatcher
 
     chat_handler = ConversationHandler(
-        entry_points=[MessageHandler(Filters.regex(DRAGON_CHAT_KEY), check_dragon),
+        entry_points=[MessageHandler(get_filter_complete_match(DRAGON_CHAT_KEY), check_dragon),
                       CommandHandler(DRAGON_KEY, check_dragon),
-                      MessageHandler(Filters.regex(
+                      MessageHandler(get_filter_complete_match(
                           TRAINER_CHAT_KEY), check_trainer),
                       CommandHandler(TRAINER_KEY, check_trainer),
                       MessageHandler(Filters.reply, handle_reply_message(None)), ],
@@ -476,10 +479,10 @@ def main():
                    admin_handler,
                    CommandHandler(MENU_KEY, start),
                    CommandHandler(DELETE_KEY, handle_delete_message),
-                   MessageHandler(Filters.regex(ABOUT_THE_BOT_KEY), about),
-                   MessageHandler(Filters.regex(HELP_KEY), helps),
-                   MessageHandler(Filters.regex(RULES_KEY), rules),
-                   MessageHandler(Filters.regex(STATUS_KEY), status)],
+                   MessageHandler(get_filter_complete_match(ABOUT_THE_BOT_KEY), about),
+                   MessageHandler(get_filter_complete_match(HELP_KEY), helps),
+                   MessageHandler(get_filter_complete_match(RULES_KEY), rules),
+                   MessageHandler(get_filter_complete_match(STATUS_KEY), status)],
         },
 
         fallbacks=[MessageHandler(Filters.all, unknown_message)],
