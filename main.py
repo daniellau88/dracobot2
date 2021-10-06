@@ -43,7 +43,7 @@ TIMEOUT = ConversationHandler.TIMEOUT
 
 Session = scoped_session(SessionLocal)
 
-CHAT_TIMEOUT_SECONDS = 10 * 60
+CHAT_TIMEOUT_SECONDS = 30
 
 
 def db_session(method):
@@ -362,7 +362,13 @@ def unsupported_media(update, context):
 
 
 def handle_timeout_chat(update, context):
-    update.message.reply_text(TIMEOUT_MESSAGE, **DEFAULT_REPLY_MARKUP)
+    timeout_message = ""
+    if CHAT_TIMEOUT_SECONDS < 60:
+        timeout_message = str(CHAT_TIMEOUT_SECONDS) + " second(s)"
+    else:
+        timeout_message = str(CHAT_TIMEOUT_SECONDS // 60) + " minutes(s)"
+
+    update.message.reply_text(TIMEOUT_MESSAGE.format(timeout_message), **DEFAULT_REPLY_MARKUP)
 
     return END
 

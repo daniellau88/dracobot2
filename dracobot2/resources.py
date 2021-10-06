@@ -149,4 +149,4 @@ UNKNOWN_COMMAND = "Unknown command. Press /" + \
     MENU_KEY + " to bring up keyboard."
 UNKNOWN_CHAT_COMMAND = "You are still chatting with your {}. Press /" + \
     DONE_KEY + " if you are done chatting."
-TIMEOUT_MESSAGE = "You have been inactive for more than 10 minutes. You will be disconnected from the chat."
+TIMEOUT_MESSAGE = "You have been inactive for more than {}. You will be disconnected from the chat."
