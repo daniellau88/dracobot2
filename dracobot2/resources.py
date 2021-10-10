@@ -68,7 +68,7 @@ HELP_MESSAGE = "Hello there, {}!\n\n" +\
     "2. <b>Delete message</b>: You can select a message and type /delete\n" +\
     "3. <b>Edit message</b>: You can edit your message to your dragon / trainer\n" +\
     "4. <b>Media files</b>: Supported files are <i>audio</i>, <i>document</i>, <i><b>photo</b></i>, <i><b>sticker</b></i>, <i>videos</i>, <i>video note</i> and <i>voice</i>\n\n" +\
-    "Please message @dlau98 if you need technical assistance!\n" +\
+    "Please message @lethiciarenissa if you need technical assistance!\n" +\
     "Thank you and we hope you'll have fun throughout this game! :)"
 GAME_RULES_MESSAGE = "Rules of Dragon and Trainer " + DRAGON_EMOJI + "\n\n" +\
     "Each of you who participated will be assigned a Trainer and a Dragon. " +\
