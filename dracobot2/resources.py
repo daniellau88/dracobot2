@@ -102,7 +102,7 @@ GAME_RULES_MESSAGE = "Rules of Dragon and Trainer " + DRAGON_EMOJI + "\n\n" +\
     "NO MOVING OF FURNITURE OUT OF THE ROOMS and AVOID MOVING of furniture\n" +\
     "And RESTRICT pranks to <b>YOUR OWN DRAGON</b> (avoid performing pranks on others’ dragons as any incidents that arise due to your unannounced pranks would implicate other trainers)\n\n" +\
     "Do adhere to the rules as stated above, as well as the basic housing regulations of RC4.\n\n" +\
-    "If you have any other questions, concerns or doubts, don’t be afraid to reach out to @ameensgarlicnaan, @Izuki_LXY and @dlau98! We hope you have fun and make new friends as well!\n\n" +\
+    "If you have any other questions, concerns or doubts, don’t be afraid to reach out to @limshoeshoe, @lethiciarenissa and @hartantio! We hope you have fun and make new friends as well!\n\n" +\
     "Love,\n" +\
     "Draco House Comm" + BLUE_HEART_EMOJI
 WELCOME_MESSAGE = "Dear {name},\n\n\n"\
@@ -110,7 +110,7 @@ WELCOME_MESSAGE = "Dear {name},\n\n\n"\
     "\"Esteemed Trainer, you are tasked to train dragon ‘{dragon_name}’ for the next 2 and a half weeks. Slowly approach the dragon at unit {dragon_room_number} to tame it and teach it new skills.\n\n"\
     "Your dragon likes ‘{dragon_likes}’ but it really dislikes ‘{dragon_dislikes}‘.\n\n"\
     "‘{dragon_requests}' is stated as off limits. Take careful note of these as you venture on your quest to tame your dragon, for there may be consequences.\n\nThe difficulty of training is LEVEL {dragon_level:d}.\n\n\n"\
-    "We, @ameensgarlicnaan, @Izuki_LXY and @dlau98, will watch over all of you trainers throughout the training. Do contact us should you need assistance in taming your dragon.\n\n\n"\
+    "We, @limshoeshoe, @lethiciarenissa and @hartantio, will watch over all of you trainers throughout the training. Do contact us should you need assistance in taming your dragon.\n\n\n"\
     "Set forth young one and be the best dragon tamer of AreSeaFore Draco.\"\n\n\n"\
     "*Game of Thrones Music Intensifies*"
 STATUS = "Trainer Status: {trainer_status}\n"\
