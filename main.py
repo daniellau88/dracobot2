@@ -43,7 +43,7 @@ TIMEOUT = ConversationHandler.TIMEOUT
 
 Session = scoped_session(SessionLocal)
 
-CHAT_TIMEOUT_SECONDS = 30
+CHAT_TIMEOUT_SECONDS = 2 * 60
 
 
 def db_session(method):
