@@ -18,7 +18,7 @@ class User(Base):
 
     id = Column(Integer, primary_key=True)
     chat_id = Column(Integer, unique=True)
-    tele_handle = Column(String(20), nullable=False, unique=True)
+    tele_handle = Column(String(25), nullable=False, unique=True)
     tele_name = Column(String(100))
     dragon_id = Column(Integer, ForeignKey('users.id'), index=True)
     # ref: https://github.com/sqlalchemy/sqlalchemy/issues/1403#issue-384617192
