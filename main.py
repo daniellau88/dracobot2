@@ -1,18 +1,22 @@
-from dracobot2.utils import *
-from dracobot2.resources import *
-from dracobot2.models import User, Role
-from dracobot2.config import SessionLocal
-from sqlalchemy.orm import scoped_session
-from sqlalchemy import or_
-from telegram.ext import (Updater, CommandHandler, MessageHandler, Filters,
-                          ConversationHandler, PicklePersistence)
-from telegram import (ReplyKeyboardMarkup, ReplyKeyboardRemove)
-from telegram.ext.dispatcher import run_async
-import os
 import logging
-import time
 import math
+import os
+import time
+import traceback
+
 from dotenv import load_dotenv
+from sqlalchemy import or_
+from sqlalchemy.orm import scoped_session
+from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove
+from telegram.ext import (CommandHandler, ConversationHandler, Filters,
+                          MessageHandler, PicklePersistence, Updater)
+from telegram.ext.dispatcher import run_async
+
+from dracobot2.config import SessionLocal
+from dracobot2.models import Role, User
+from dracobot2.resources import *
+from dracobot2.utils import *
+
 load_dotenv()
 
 
@@ -84,15 +88,10 @@ def start(update, context, session):
                 welcome_message = WELCOME_MESSAGE.format(**{
                     'name': user_db.details.name,
                     'dragon_name': dragon.details.name,
-                    'dragon_room_number': dragon.details.room_number,
-                    'dragon_likes': dragon.details.likes,
-                    'dragon_dislikes': dragon.details.dislikes,
-                    'dragon_requests': dragon.details.requests,
-                    'dragon_level': dragon.details.level
                 })
                 messages = list(filter(lambda x: len(x) > 0, welcome_message.split('\n\n\n')))
                 for message in messages:
-                    update.message.reply_text(message)
+                    update.message.reply_text(message, parse_mode=telegram.ParseMode.HTML)
                     time.sleep(math.ceil(len(message) / 40) + 1)
 
             else:
@@ -383,8 +382,8 @@ def done_chat(target):
 
 
 def _error(update, context):
-    logger.error(context)
     logger.error(context.error)
+    logger.error(traceback.print_tb(context.error.__traceback__))
 
 
 def main():

@@ -1,11 +1,12 @@
 import telegram
-from telegram import InputMediaPhoto, InputMediaAudio, InputMediaDocument, InputMediaVideo
-from telegram.ext import Filters
-from sqlalchemy import or_, and_
 from dracobot2.models import MessageMapping, Role
 from dracobot2.resources import *
-from .resources import *
+from sqlalchemy import and_, or_
+from telegram import (InputMediaAudio, InputMediaDocument, InputMediaPhoto,
+                      InputMediaVideo)
+from telegram.ext import Filters
 
+from .resources import *
 
 SUPPORTED_MESSAGE_FILTERS = Filters.audio | Filters.document | Filters.photo | Filters.sticker | Filters.text | Filters.video | Filters.video_note | Filters.voice
 UNSUPPORTED_MESSAGE_FILTERS = Filters.animation | Filters.contact | Filters.dice | Filters.game | Filters.invoice | Filters.location | Filters.passport_data | Filters.poll | Filters.successful_payment | Filters.venue
@@ -67,11 +68,7 @@ def forward_message(message, chat_id, bot, session, message_from=Role.DRAGON):
             else:
                 reply_to_message_id = reply_message.sender_message_id
 
-    if is_forward:
-        sent_msg = message.forward(chat_id)
-        caption_msg = bot.send_message(
-            chat_id=chat_id, text=caption_style_text, reply_to_message_id=sent_msg.message_id)
-    elif is_photo:
+    if is_photo:
         highest_res_photo = get_highest_resolution(message.photo)
         sent_msg = bot.send_photo(chat_id=chat_id, photo=highest_res_photo,
                                   caption=caption_style_text, reply_to_message_id=reply_to_message_id)
