@@ -133,3 +133,4 @@ UNKNOWN_COMMAND = "Unknown command. Press /" + \
 UNKNOWN_CHAT_COMMAND = "You are still chatting with your {}. Press /" + \
     DONE_KEY + " if you are done chatting."
 TIMEOUT_MESSAGE = "You have been inactive for more than {}. You will be disconnected from the chat."
+NON_PRIVATE_MESSAGE = "The media you are sending is potentially not private. The message is not sent to prevent exposing your identity."

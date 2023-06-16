@@ -16,6 +16,7 @@ from dracobot2.config import SessionLocal
 from dracobot2.models import Role, User
 from dracobot2.resources import *
 from dracobot2.utils import *
+from dracobot2.utils.msg_private import is_message_private
 
 load_dotenv()
 
@@ -248,6 +249,10 @@ async def send_message_to_dragon(update: Update, context: ContextTypes.DEFAULT_T
 
     dragon = session.query(User).filter(User.id == dragon_id).first()
 
+    if not is_message_private(update.message):
+        await update.message.reply_text(NON_PRIVATE_MESSAGE, reply_to_message_id=update.message.message_id, **REMOVE_REPLY_MARKUP)
+        return DRAGON_CHAT
+
     if dragon is not None:
         await forward_message(update.message, dragon.chat_id,
                         context.bot, session, message_from=Role.TRAINER)
@@ -308,9 +313,9 @@ def handle_reply_message(current_mode):
         ret_value = END
 
         if new_mode == Role.TRAINER or (new_mode is None and current_mode == Role.TRAINER):
-            ret_value = send_message_to_trainer(update, context, session)
+            ret_value = await send_message_to_trainer(update, context, session)
         elif new_mode == Role.DRAGON or (new_mode is None and current_mode == Role.DRAGON):
-            ret_value = send_message_to_dragon(update, context, session)
+            ret_value = await send_message_to_dragon(update, context, session)
 
         if new_mode is not None:
             if current_mode is None:
