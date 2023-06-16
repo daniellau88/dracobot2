@@ -1,15 +1,16 @@
 import telegram
-from dracobot2.models import MessageMapping, Role
-from dracobot2.resources import *
 from sqlalchemy import and_, or_
 from telegram import (InputMediaAudio, InputMediaDocument, InputMediaPhoto,
                       InputMediaVideo)
-from telegram.ext import Filters
+from telegram.ext import filters
+
+from dracobot2.models import MessageMapping, Role
+from dracobot2.resources import *
 
 from .resources import *
 
-SUPPORTED_MESSAGE_FILTERS = Filters.audio | Filters.document | Filters.photo | Filters.sticker | Filters.text | Filters.video | Filters.video_note | Filters.voice
-UNSUPPORTED_MESSAGE_FILTERS = Filters.animation | Filters.contact | Filters.dice | Filters.game | Filters.invoice | Filters.location | Filters.passport_data | Filters.poll | Filters.successful_payment | Filters.venue
+SUPPORTED_MESSAGE_FILTERS = filters.AUDIO | filters.Document.ALL | filters.PHOTO | filters.Sticker.ALL | filters.TEXT | filters.VIDEO | filters.VIDEO_NOTE | filters.VOICE
+UNSUPPORTED_MESSAGE_FILTERS = ~ SUPPORTED_MESSAGE_FILTERS
 
 
 def get_highest_resolution(photos):
@@ -41,7 +42,7 @@ def check_reply_mapping(message, session):
     return current_mode
 
 
-def forward_message(message, chat_id, bot, session, message_from=Role.DRAGON):
+async def forward_message(message, chat_id, bot, session, message_from=Role.DRAGON):
     is_forward = message.forward_from is not None or message.forward_from_message_id is not None
     is_photo = len(message.photo) > 0
     is_document = message.document is not None
@@ -70,32 +71,32 @@ def forward_message(message, chat_id, bot, session, message_from=Role.DRAGON):
 
     if is_photo:
         highest_res_photo = get_highest_resolution(message.photo)
-        sent_msg = bot.send_photo(chat_id=chat_id, photo=highest_res_photo,
+        sent_msg = await bot.send_photo(chat_id=chat_id, photo=highest_res_photo,
                                   caption=caption_style_text, reply_to_message_id=reply_to_message_id)
     elif is_document:
-        sent_msg = bot.send_document(chat_id=chat_id, document=message.document,
+        sent_msg = await bot.send_document(chat_id=chat_id, document=message.document,
                                      caption=caption_style_text, reply_to_message_id=reply_to_message_id)
     elif is_video:
-        sent_msg = bot.send_video(chat_id=chat_id, video=message.video,
+        sent_msg = await bot.send_video(chat_id=chat_id, video=message.video,
                                   caption=caption_style_text, reply_to_message_id=reply_to_message_id)
     elif is_audio:
-        sent_msg = bot.send_audio(chat_id=chat_id, audio=message.audio,
+        sent_msg = await bot.send_audio(chat_id=chat_id, audio=message.audio,
                                   caption=caption_style_text, reply_to_message_id=reply_to_message_id)
     elif is_voice:
-        sent_msg = bot.send_voice(chat_id=chat_id, voice=message.voice,
+        sent_msg = await bot.send_voice(chat_id=chat_id, voice=message.voice,
                                   caption=caption_style_text, reply_to_message_id=reply_to_message_id)
     elif is_sticker:
-        sent_msg = bot.send_sticker(
+        sent_msg = await bot.send_sticker(
             chat_id=chat_id, sticker=message.sticker, reply_to_message_id=reply_to_message_id)
-        caption_msg = bot.send_message(
+        caption_msg = await bot.send_message(
             chat_id=chat_id, text=caption_style_text, reply_to_message_id=sent_msg.message_id)
     elif is_video_note:
-        sent_msg = bot.send_video_note(
+        sent_msg = await bot.send_video_note(
             chat_id=chat_id, video_note=message.video_note, reply_to_message_id=reply_to_message_id)
-        caption_msg = bot.send_message(
+        caption_msg = await bot.send_message(
             chat_id=chat_id, text=caption_style_text, reply_to_message_id=sent_msg.message_id)
     else:
-        sent_msg = bot.send_message(chat_id=chat_id, text=format_message(
+        sent_msg = await bot.send_message(chat_id=chat_id, text=format_message(
             message.text, message_from=message_from, is_prefix=True), reply_to_message_id=reply_to_message_id)
 
     mapping = MessageMapping(sender_message_id=message.message_id, sender_chat_id=message.chat_id,
@@ -108,7 +109,7 @@ def forward_message(message, chat_id, bot, session, message_from=Role.DRAGON):
 # Must be used together with db_session
 
 
-def edit_message(update, context, session):
+async def edit_message(update, context, session):
     edited_message = update.edited_message
     message_id = edited_message.message_id
     chat_id = edited_message.chat_id
@@ -137,7 +138,7 @@ def edit_message(update, context, session):
 
             for edited_message_db in edited_messages_db:
                 try:
-                    context.bot.edit_message_media(
+                    await context.bot.edit_message_media(
                         media=edited_media, chat_id=edited_message_db.receiver_chat_id, message_id=edited_message_db.receiver_message_id)
                 except telegram.error.BadRequest as e:
                     print(e)
@@ -149,7 +150,7 @@ def edit_message(update, context, session):
                     edited_message.text, message_from=edited_message_db.message_from, is_prefix=True, is_edited=True)
 
                 try:
-                    context.bot.edit_message_text(
+                    await context.bot.edit_message_text(
                         formatted_text, chat_id=edited_message_db.receiver_chat_id, message_id=edited_message_db.receiver_message_id)
                 except telegram.error.BadRequest as e:
                     print(e)
@@ -160,41 +161,41 @@ def edit_message(update, context, session):
                     edited_message.caption, message_from=edited_message_db.message_from, is_prefix=False, is_edited=True)
 
                 try:
-                    context.bot.edit_message_caption(
+                    await context.bot.edit_message_caption(
                         caption=formatted_caption, chat_id=edited_message_db.receiver_chat_id, message_id=edited_message_db.receiver_message_id)
                 except telegram.error.BadRequest as e:
                     print(e)
                     pass
 
 
-def delete_message(message, message_id, chat_id, reply_to_message_id, bot, session):
+async def delete_message(message, message_id, chat_id, reply_to_message_id, bot, session):
     to_delete_messages = session.query(MessageMapping).filter(
         MessageMapping.sender_message_id == message_id, MessageMapping.sender_chat_id == chat_id).all()
 
     if not (to_delete_messages and len(to_delete_messages) > 0):
-        message.reply_text(CANNOT_DELETE_ERROR,
+        await message.reply_text(CANNOT_DELETE_ERROR,
                            reply_to_message_id=reply_to_message_id)
     elif to_delete_messages[0].deleted:
-        message.reply_text(DELETE_MESSAGE_ERROR,
+        await message.reply_text(DELETE_MESSAGE_ERROR,
                            reply_to_message_id=reply_to_message_id)
     else:
         for to_delete_message in to_delete_messages:
-            bot.delete_message(chat_id=to_delete_message.receiver_chat_id,
+            await bot.delete_message(chat_id=to_delete_message.receiver_chat_id,
                                message_id=to_delete_message.receiver_message_id)
             if to_delete_message.receiver_caption_message_id:
-                bot.delete_message(chat_id=to_delete_message.receiver_chat_id,
+                await bot.delete_message(chat_id=to_delete_message.receiver_chat_id,
                                    message_id=to_delete_message.receiver_caption_message_id)
             to_delete_message.deleted = True
         session.commit()
-        message.reply_text(DELETE_MESSAGE_SUCCESS,
+        await message.reply_text(DELETE_MESSAGE_SUCCESS,
                            reply_to_message_id=reply_to_message_id)
 
 
-def delete_message_reply(message, bot, session):
+async def delete_message_reply(message, bot, session):
     is_replying = message.reply_to_message is not None
     if is_replying:
         message_id = message.reply_to_message.message_id
         chat_id = message.reply_to_message.chat_id
-        delete_message(message, message_id, chat_id, message_id, bot, session)
+        await delete_message(message, message_id, chat_id, message_id, bot, session)
     else:
-        message.reply_text(DELETE_MESSAGE_REPLY_ERROR)
+        await message.reply_text(DELETE_MESSAGE_REPLY_ERROR)
