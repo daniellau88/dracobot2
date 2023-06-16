@@ -326,6 +326,7 @@ def handle_reply_message(current_mode):
 
 @db_session
 def handle_edited_message(update, context, session):
+    import pdb; pdb.set_trace()
     edit_message(update, context, session)
 
 

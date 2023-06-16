@@ -28,6 +28,7 @@ MEAT_EMOJI = u"\U0001F356"
 MUSIC_EMOJI = u"\U0001F3B6"
 SPEAK_EMOJI = u"\U0001F5E3"
 DRUM_EMOJI = u"\U0001F941"
+SUN_EMOJI = u"\U0001F31E"
 
 
 WHALE_EMOJI = u"\U0001F40B"
@@ -70,10 +71,10 @@ HELP_MESSAGE = "Hello there, {}!\n\n" +\
     ABOUT_THE_BOT_KEY + ": To view information about the bot\n\n" +\
     "Type /" + DONE_KEY + " at any point in time to exit the chat\n" +\
     "Type /" + MENU_KEY + " to show the Main Menu\n\n" +\
-    "<u>Features</u>\n" +\
+    "<u>Important Features</u>\n" +\
     "1. <b>Reply message</b>: You can reply to a message to automatically chat with your angel / mortal.\n" +\
-    "2. <b>Delete message</b>: You can select a message and type /delete\n" +\
-    "3. <b>Edit message</b>: You can edit your message to your angel / mortal\n" +\
+    "2. <b>Delete message</b>: You can select a message and reply /delete to it.\n" +\
+    "3. <b>Edit message</b>: You can edit your message to your angel / mortal. It will automatically be updated on their side.\n" +\
     "4. <b>Media files</b>: Supported files are <i>audio</i>, <i>document</i>, <i><b>photo</b></i>, <i><b>sticker</b></i>, <i>videos</i>, <i>video note</i> and <i>voice</i>\n\n" +\
     "Please message @dlau98 if you need technical assistance!\n" +\
     "Thank you and we hope you'll have fun throughout this game! :)"
@@ -91,13 +92,12 @@ GAME_RULES_MESSAGE = "Rules of Angel and Mortal " + DRAGON_EMOJI + "\n\n" +\
     "6: Forward a joke\n" +\
     "7: Whatever the Lord leads you to do " + SMILE_EMOJI
 WELCOME_MESSAGE = "Dear {name},\n\n\n"\
-    "<i>You woke up dizzy in Star Vista " + STAR_EMOJI + " unsure of how you were transported here. Next to you lies a piece of paper which reads:</i>\n\n\n"\
+    "<i>You woke up dizzy in Sunway Pyramid" + SUN_EMOJI + " unsure of how you were transported here (by bus, duh!). Next to you lies a piece of paper which reads:</i>\n\n\n"\
     "Esteemed Angel " + TRAINER_EMOJI + "\n\n\n"\
     "" + PARTY_EMOJI + " Welcome to Legacy Camp " + PARTY_EMOJI + "\n\n\n"\
     "For the next few days, as you feast " + MEAT_EMOJI + " on the word of God and enjoy the Praise & Worship " + MUSIC_EMOJI + "\n\n\n"\
     "Don't just keep it to yourself, share it with your Mortal to bless them\n\n"\
     "Give them an encouraging word, or just share what is on your heart " + BLUE_HEART_EMOJI + "\n\n\n"\
-    "If you don't know what to do, look out for random tasks / ideas that will be sent here\n\n\n"\
     "And now your mortal is " + DRUM_EMOJI * 2 + " (drumroll) " + DRUM_EMOJI * 2 + "\n\n\n"\
     "" + STAR_EMOJI * 2 + " <b>{dragon_name}</b> "+ STAR_EMOJI * 2 +  "\n\n\n"\
     "<i>Set forth beloved angel and be the bestest blessing " + STAR_EMOJI * 2 + " to your mortal</i>\n\n\n"\
