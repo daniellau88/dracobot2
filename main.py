@@ -92,7 +92,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE, session):
                 })
                 messages = list(filter(lambda x: len(x) > 0, welcome_message.split('\n\n\n')))
                 for message in messages:
-                    await update.message.reply_text(message, parse_mode=telegram.ParseMode.HTML)
+                    await update.message.reply_text(message, parse_mode=telegram.constants.ParseMode.HTML)
                     time.sleep(math.ceil(len(message) / 40) + 1)
 
             else:
@@ -131,13 +131,13 @@ async def helps(update: Update, context: ContextTypes.DEFAULT_TYPE, session):
         first_name = user_db.details.name
 
     await update.message.reply_text(HELP_MESSAGE.format(
-        first_name), parse_mode=telegram.ParseMode.HTML, **DEFAULT_REPLY_MARKUP)
+        first_name), parse_mode=telegram.constants.ParseMode.HTML, **DEFAULT_REPLY_MARKUP)
 
     return MAIN
 
 
 async def rules(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(GAME_RULES_MESSAGE, parse_mode=telegram.ParseMode.HTML, **DEFAULT_REPLY_MARKUP)
+    await update.message.reply_text(GAME_RULES_MESSAGE, parse_mode=telegram.constants.ParseMode.HTML, **DEFAULT_REPLY_MARKUP)
 
     return MAIN
 
